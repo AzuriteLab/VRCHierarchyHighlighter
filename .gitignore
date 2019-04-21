@@ -1,0 +1,12 @@
+*/*/
+*.*
+
+!icons/
+!icons/*
+!*.txt
+!*.md
+!*.png
+!*.cs
+!*.unitypackage
+
+!*.gitignore
