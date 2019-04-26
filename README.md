@@ -29,4 +29,13 @@ unitypackageをプロジェクトのAssetsフォルダ直下に突っ込んで�
 コンポーネント名を文字列情報でマッチさせているため、
 オブジェクト名に明示的にコンポーネント名を含めていた場合は誤って判定されるケースがあります。
 
+## 更新履歴
+
+2019.04.27.0
+	重篤なバグを修正
+	例えば、既にDynamicBoneが設定されているアバターのprefabをHierarchyに読み込んだ場合、
+	DynamicBoneが存在しない場合は該当オブジェクトがnullとなってしまい、VRCHierarchyHighlighterが
+	メモリアクセスエラーによってエラーで中断されてしまい、以降のGameObjectが描画されない問題がありました
+	
+
 Copyright(c) 2019 AzuriteLab
