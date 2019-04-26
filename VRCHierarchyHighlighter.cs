@@ -15,7 +15,7 @@ using UnityEngine;
 
 public static class HierarchyIndentHelper
 {
-    private const string kResourceDirPath = "Assets/Editor/Resources/";
+    private const string kResourceDirPath = "Assets/VRCHierarchyHighlighter/Editor/Resources/";
     private const string kResourceSuffix = ".png";
     private static readonly string[] kIconNames = {
         "DynamicBone",
@@ -88,7 +88,7 @@ public static class HierarchyIndentHelper
                 {
                     foreach (var icon_info in icon_resources_)
                     {
-                        if (component.ToString().Contains(icon_info.Key))
+                        if (component != null && component.ToString().Contains(icon_info.Key))
                         {
                             Color boxcolor = Color.white;
                             boxcolor.a = 1f;
