@@ -115,7 +115,6 @@ public static class HierarchyIndentHelper
                         if (component != null && component.ToString().Contains(icon_info.Key))
                         {
                             Color boxcolor = Color.white;
-                            boxcolor.a = 1f;
                             GUI.color = boxcolor;
                             rect.x = 0; //target_rect.xMax - target_rect.height - 20; // 右寄せにする場合
                             rect.xMax = target_rect.xMax;
