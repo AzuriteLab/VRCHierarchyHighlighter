@@ -31,14 +31,16 @@ unitypackageをプロジェクトのAssetsフォルダ直下に突っ込んで�
 
 ## 更新履歴
 
+```
 2019.05.19.0
 	バグを修正
 	実行モードから戻ると何故かメンバが初期化され、アイコンリソースが解放されてしまう問題に対処
+	
 2019.04.27.0
 	重篤なバグを修正
 	例えば、既にDynamicBoneが設定されているアバターのprefabをHierarchyに読み込んだ場合、
 	DynamicBoneが存在しない場合は該当オブジェクトがnullとなってしまい、VRCHierarchyHighlighterが
 	メモリアクセスエラーによってエラーで中断されてしまい、以降のGameObjectが描画されない問題がありました
-	
+```
 
 Copyright(c) 2019 AzuriteLab
