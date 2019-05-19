@@ -3,29 +3,29 @@
  *  see also: http://baba-s.hatenablog.com/entry/2015/05/09/122713
  */
 
- /*
- The MIT License (MIT)
+/*
+The MIT License (MIT)
 
- Copyright (c) 2019 AzuriteLab
+Copyright (c) 2019 AzuriteLab
 
- Permission is hereby granted, free of charge, to any person obtaining a copy
- of this software and associated documentation files (the "Software"), to deal
- in the Software without restriction, including without limitation the rights
- to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- copies of the Software, and to permit persons to whom the Software is
- furnished to do so, subject to the following conditions:
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
- The above copyright notice and this permission notice shall be included in
- all copies or substantial portions of the Software.
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
 
- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- THE SOFTWARE.
- */
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*/
 
 using System.Collections;
 using System.Collections.Generic;
@@ -67,6 +67,7 @@ public static class HierarchyIndentHelper
         {
             string filepath = kResourceDirPath + name + kResourceSuffix;
             Texture2D icon = LoadIconTex2DFromPNG(filepath);
+            icon_resources_.Remove(name);
             icon_resources_.Add(name, icon);
         }
     }
@@ -101,6 +102,14 @@ public static class HierarchyIndentHelper
         rect.x = target_rect.x;
         rect.xMax = target_rect.xMax;
         GUI.Box(rect, "");
+
+        int cnt = icon_resources_.Count;
+        if (icon_resources_[kIconNames[0]] == null)
+        {
+            // 実行モードに移行して戻ると何故かメンバの中身が初期化されてしまうので再セットアップ
+            // 少数のテクスチャをメインスレッドで読み込むので状況によっては一瞬ラグるかもしれない
+            SetupIcons();
+        }
 
         var obj = EditorUtility.InstanceIDToObject(instance_id) as GameObject;
         if (obj != null)
