@@ -5,6 +5,7 @@ VRCで扱う重要コンポーネントをアイコンで表示するやつで�
 
 対応コンポーネントは、
 * VRC_AvaterDescriptor
+* MeshRenderer
 * SkinnedMeshRenderer
 * DynamicBone
 です。
@@ -17,6 +18,8 @@ VRCで扱う重要コンポーネントをアイコンで表示するやつで�
 ## 使い方
 
 unitypackageをプロジェクトのAssetsフォルダ直下に突っ込んでください（それ以外だと動作しません）
+
+設定パネルはUnityのメニューバーから `Window -> VRCHierarchyHighlighter` を選択して表示できます。
 
 ## 捕捉
 
@@ -32,6 +35,15 @@ unitypackageをプロジェクトのAssetsフォルダ直下に突っ込んで�
 ## 更新履歴
 
 ```
+2019.07.25.0
+    機能を追加
+    * コントロールパネルの実装（Window -> VRCHierarchyHighlighter）
+        * ハイライトの色をHSVで変更できるようにしました
+        * アイコン/ハイライト/頂点数カウント（新機能）のon/offをできるようにしました
+    * SkinnedMeshRendererの頂点数をヒエラルキから確認できるようにしました（デフォルトoff）
+    * DynamicBoneに有効なターゲットが指定されていない場合、アイコンが薄くなるようにしました
+    * MeshRendererのアイコンを表示するようにしました
+
 2019.05.19.0
 	バグを修正
 	実行モードから戻ると何故かメンバが初期化され、アイコンリソースが解放されてしまう問題に対処
