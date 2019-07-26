@@ -27,6 +27,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.IO;
@@ -86,20 +87,20 @@ public static class HierarchyIndentHelper
     {
         var color = GUI.color;
 
-        if (VRChierarchyHighlighterEdit.is_draw_highlights)
+        if (VRChierarchyHighlighterEdit.is_draw_highlights.GetValue())
         {
-            var hue = ((float)(target_rect.x) / VRChierarchyHighlighterEdit.precision) % 1.0f;
+            var hue = ((float)(target_rect.x) / VRChierarchyHighlighterEdit.precision.GetValue() % 1.0f);
 
-            var background_color = UnityEngine.Color.HSVToRGB(
-                hue,
-                VRChierarchyHighlighterEdit.saturation,
-                VRChierarchyHighlighterEdit.value);
+            var background_color = Color.HSVToRGB(
+                hue, VRChierarchyHighlighterEdit.saturation.GetValue(),
+                VRChierarchyHighlighterEdit.value.GetValue()
+            );
 
             GUI.color = new Color(
                 background_color.r,
                 background_color.g,
                 background_color.b,
-                VRChierarchyHighlighterEdit.alpha
+                VRChierarchyHighlighterEdit.alpha.GetValue()
             );
 
             var rect = target_rect;
@@ -108,7 +109,7 @@ public static class HierarchyIndentHelper
             GUI.Box(rect, "");
         }
 
-        if (VRChierarchyHighlighterEdit.is_draw_icons)
+        if (VRChierarchyHighlighterEdit.is_draw_icons.GetValue())
         {
             int cnt = icon_resources_.Count;
             if (icon_resources_[kIconNames[0]] == null)
@@ -142,7 +143,15 @@ public static class HierarchyIndentHelper
                 if (component != null && component.ToString().Contains(icon_info.Key))
                 {
                     var icon = icon_info.Value;
-                    // DynamicBoneのm_Rootに対象となるTransformが設定されていない場合は専用のアイコンに切り替える                     if (component.ToString().Contains("DynamicBone"))                     {                         var db = (DynamicBone)component;                         if (db.m_Root == null)                         {                             icon = icon_resources_["DynamicBonePartial"];                         }                     }
+                    // DynamicBoneのm_Rootに対象となるTransformが設定されていない場合は専用のアイコンに切り替える
+                    if (component.ToString().Contains("DynamicBone"))
+                    {
+                        var db = (DynamicBone)component;
+                        if (db.m_Root == null)
+                        {
+                            icon = icon_resources_["DynamicBonePartial"];
+                        }
+                    }
 
                     Color boxcolor = Color.white;
                     GUI.color = boxcolor;
@@ -154,7 +163,7 @@ public static class HierarchyIndentHelper
 
                     GUI.Label(target_rect, icon);
 
-                    if (VRChierarchyHighlighterEdit.is_draw_vers)
+                    if (VRChierarchyHighlighterEdit.is_draw_vers.GetValue())
                     {
                         PreviewVers_(component, target_rect);
                     }
@@ -183,6 +192,35 @@ public static class HierarchyIndentHelper
     }
 }
 
+public struct VHHParameter<T>
+{
+    public VHHParameter(T default_value, string signature, Func<string,T,T> init, Action<string, T> teardown)
+    {
+        default_value_ = default_value;
+        signature_ = signature;
+        value_ = init(signature_, default_value_);
+        teardown_ = teardown;
+    }
+
+    // IDisposableで実装したDisposableが確実に呼び出される保証がないので普通の関数にしてる
+    public void Destroy()
+    {
+        teardown_(signature_, value_);
+    }
+
+    public T GetDefault() { return default_value_; }
+    public T GetValue() { return value_; }
+    public string GetSignature() { return signature_; }
+
+    public void SetValue(T value) { value_ = value; }
+    public void SetDefault() { value_ = default_value_; }
+
+    private T value_;
+    private T default_value_;
+    private string signature_;
+    private Action<string, T> teardown_;
+}
+
 public class VRChierarchyHighlighterEdit : EditorWindow
 {
     [MenuItem("Window/VRChierarchyHighlighter")]
@@ -191,57 +229,52 @@ public class VRChierarchyHighlighterEdit : EditorWindow
         GetWindow<VRChierarchyHighlighterEdit>();
     }
 
-    public const bool kDefaultIsDrawIcons = true;
-    public const bool kDefaultIsDrawHighlights = true;
-    public const bool kDefaultIsDrawVers = false;
-    public const float kDefaultSaturation = 0.7f;
-    public const float kDefaultValue = 0.7f;
-    public const float kDefaultPrecision = 100.0f;
-    public const float kDefaultAlpha = 0.2f;
-
-    private const string kSignatureIsDrawIcons = "vhh.is_draw_icons";
-    private const string kSignatureIsDrawHighlights = "vhh.is_draw_highlights";
-    private const string kSignatureIsDrawVers = "vhh.is_draw_Vers";
-    private const string kSignatureSaturation = "vhh.saturation";
-    private const string kSignatureValue = "vhh.value";
-    private const string kSignaturePrecision = "vhh.precision";
-    private const string kSignatureAlpha = "vhh.alpha";
-
-    public static bool is_draw_icons
-        = EditorPrefs.GetBool(kSignatureIsDrawIcons, kDefaultIsDrawIcons);
-    public static bool is_draw_highlights
-        = EditorPrefs.GetBool(kSignatureIsDrawHighlights, kDefaultIsDrawHighlights);
-    public static bool is_draw_vers
-        = EditorPrefs.GetBool(kSignatureIsDrawVers, kDefaultIsDrawVers);
-    public static float saturation
-        = EditorPrefs.GetFloat(kSignatureSaturation, kDefaultSaturation);
-    public static float value
-        = EditorPrefs.GetFloat(kSignatureValue, kDefaultValue);
-    public static float precision
-        = EditorPrefs.GetFloat(kSignaturePrecision, kDefaultPrecision);
-    public static float alpha
-        = EditorPrefs.GetFloat(kSignatureAlpha, kDefaultAlpha);
+    public static VHHParameter<bool> is_draw_icons
+        = new VHHParameter<bool>(true, "vhh.is_draw_icons", EditorPrefs.GetBool, EditorPrefs.SetBool);
+    public static VHHParameter<bool> is_draw_highlights
+        = new VHHParameter<bool>(true, "vhh.is_draw_highlights", EditorPrefs.GetBool, EditorPrefs.SetBool);
+    public static VHHParameter<bool> is_draw_vers
+        = new VHHParameter<bool>(false, "vhh.is_draw_vers", EditorPrefs.GetBool, EditorPrefs.SetBool);
+    public static VHHParameter<float> saturation
+        = new VHHParameter<float>(0.7f, "vhh.saturation", EditorPrefs.GetFloat, EditorPrefs.SetFloat);
+    public static VHHParameter<float> value
+        = new VHHParameter<float>(0.7f, "vhh.value", EditorPrefs.GetFloat, EditorPrefs.SetFloat);
+    public static VHHParameter<float> precision
+        = new VHHParameter<float>(100.0f, "vhh.precision", EditorPrefs.GetFloat, EditorPrefs.SetFloat);
+    public static VHHParameter<float> alpha
+        = new VHHParameter<float>(0.2f, "vhh.alpha", EditorPrefs.GetFloat, EditorPrefs.SetFloat);
 
     private void OnDestroy()
     {
-        EditorPrefs.SetBool(kSignatureIsDrawIcons, is_draw_icons);
-        EditorPrefs.SetBool(kSignatureIsDrawHighlights, is_draw_highlights);
-        EditorPrefs.SetBool(kSignatureIsDrawVers, is_draw_vers);
-        EditorPrefs.SetFloat(kSignatureSaturation, saturation);
-        EditorPrefs.SetFloat(kSignatureValue, value);
-        EditorPrefs.SetFloat(kSignaturePrecision, precision);
-        EditorPrefs.SetFloat(kSignatureAlpha, alpha);
+        is_draw_icons.Destroy();
+        is_draw_highlights.Destroy();
+        is_draw_vers.Destroy();
+        saturation.Destroy();
+        value.Destroy();
+        precision.Destroy();
+        alpha.Destroy();
     }
 
     void OnGUI()
     {
         EditorGUI.BeginChangeCheck();
 
+        if (GUI.Button(new Rect(EditorGUILayout.GetControlRect().xMax - 100, 10, 100, 20), "Default"))
+        {
+            is_draw_icons.SetDefault();
+            is_draw_highlights.SetDefault();
+            is_draw_vers.SetDefault();
+            precision.SetDefault();
+            saturation.SetDefault();
+            value.SetDefault();
+            alpha.SetDefault();
+        }
+
         EditorGUILayout.LabelField("General Settings: ");
         EditorGUI.indentLevel++;
-        is_draw_icons = EditorGUILayout.ToggleLeft("Show Icons", is_draw_icons);
-        is_draw_vers = EditorGUILayout.ToggleLeft("Show Vertexes", is_draw_vers);
-        is_draw_highlights = EditorGUILayout.ToggleLeft("Draw Highlights", is_draw_highlights);
+        is_draw_icons.SetValue(EditorGUILayout.ToggleLeft("Show Icons", is_draw_icons.GetValue()));
+        is_draw_vers.SetValue(EditorGUILayout.ToggleLeft("Show Vertexes", is_draw_vers.GetValue()));
+        is_draw_highlights.SetValue(EditorGUILayout.ToggleLeft("Draw Highlights", is_draw_highlights.GetValue()));
         EditorGUI.indentLevel--;
 
         EditorGUILayout.Separator();
@@ -249,24 +282,11 @@ public class VRChierarchyHighlighterEdit : EditorWindow
         EditorGUILayout.LabelField("Highlights Settings: ");
         EditorGUI.indentLevel++;
 
-        precision = EditorGUILayout.Slider("Hue Precision", precision, 0.0f, 100.0f);
-        saturation = EditorGUILayout.Slider("Saturation", saturation, 0.0f, 1.0f);
-        value = EditorGUILayout.Slider("Value", value, 0.0f, 1.0f);
-        alpha = EditorGUILayout.Slider("Alpha", alpha, 0.0f, 1.0f);
+        precision.SetValue(EditorGUILayout.Slider("Hue Precision", precision.GetValue(), 0.0f, 100.0f));
+        saturation.SetValue(EditorGUILayout.Slider("Saturation", saturation.GetValue(), 0.0f, 1.0f));
+        value.SetValue(EditorGUILayout.Slider("Value", value.GetValue(), 0.0f, 1.0f));
+        alpha.SetValue(EditorGUILayout.Slider("Alpha", alpha.GetValue(), 0.0f, 1.0f));
         EditorGUI.indentLevel--;
-
-        EditorGUILayout.Separator();
-
-        if (GUI.Button(new Rect(EditorGUILayout.GetControlRect().xMax - 100, 10, 100, 20), "Default"))
-        {
-            is_draw_icons = kDefaultIsDrawIcons;
-            is_draw_highlights = kDefaultIsDrawHighlights;
-            is_draw_vers = kDefaultIsDrawVers;
-            precision = kDefaultPrecision;
-            saturation = kDefaultSaturation;
-            value = kDefaultValue;
-            alpha = kDefaultAlpha;
-        }
 
         if (EditorGUI.EndChangeCheck())
         {
