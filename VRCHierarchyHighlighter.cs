@@ -89,7 +89,9 @@ public static class HierarchyIndentHelper
 
         if (VRChierarchyHighlighterEdit.is_draw_highlights.GetValue())
         {
-            var hue = ((float)(target_rect.x) / VRChierarchyHighlighterEdit.precision.GetValue() % 1.0f);
+            var hue = ((float)(target_rect.x) / (float)(target_rect.xMax) 
+                * VRChierarchyHighlighterEdit.precision.GetValue()
+                + VRChierarchyHighlighterEdit.hue.GetValue()) % 1.0f;
 
             var background_color = Color.HSVToRGB(
                 hue, VRChierarchyHighlighterEdit.saturation.GetValue(),
@@ -147,7 +149,7 @@ public static class HierarchyIndentHelper
                     if (component.ToString().Contains("DynamicBone"))
                     {
                         var db = (DynamicBone)component;
-                        if (db.m_Root == null)
+                        if (db.GetType().GetMember("m_Root").Count() > 0 && db.m_Root == null)
                         {
                             icon = icon_resources_["DynamicBonePartial"];
                         }
@@ -239,8 +241,10 @@ public class VRChierarchyHighlighterEdit : EditorWindow
         = new VHHParameter<float>(0.7f, "vhh.saturation", EditorPrefs.GetFloat, EditorPrefs.SetFloat);
     public static VHHParameter<float> value
         = new VHHParameter<float>(0.7f, "vhh.value", EditorPrefs.GetFloat, EditorPrefs.SetFloat);
+    public static VHHParameter<float> hue
+        = new VHHParameter<float>(0.3f, "vhh.hue", EditorPrefs.GetFloat, EditorPrefs.SetFloat);
     public static VHHParameter<float> precision
-        = new VHHParameter<float>(100.0f, "vhh.precision", EditorPrefs.GetFloat, EditorPrefs.SetFloat);
+        = new VHHParameter<float>(1.0f, "vhh.precision", EditorPrefs.GetFloat, EditorPrefs.SetFloat);
     public static VHHParameter<float> alpha
         = new VHHParameter<float>(0.2f, "vhh.alpha", EditorPrefs.GetFloat, EditorPrefs.SetFloat);
 
@@ -252,6 +256,7 @@ public class VRChierarchyHighlighterEdit : EditorWindow
         saturation.Destroy();
         value.Destroy();
         precision.Destroy();
+        hue.Destroy();
         alpha.Destroy();
     }
 
@@ -265,6 +270,7 @@ public class VRChierarchyHighlighterEdit : EditorWindow
             is_draw_highlights.SetDefault();
             is_draw_vers.SetDefault();
             precision.SetDefault();
+            hue.SetDefault();
             saturation.SetDefault();
             value.SetDefault();
             alpha.SetDefault();
@@ -274,6 +280,9 @@ public class VRChierarchyHighlighterEdit : EditorWindow
         EditorGUI.indentLevel++;
         is_draw_icons.SetValue(EditorGUILayout.ToggleLeft("Show Icons", is_draw_icons.GetValue()));
         is_draw_vers.SetValue(EditorGUILayout.ToggleLeft("Show Vertexes", is_draw_vers.GetValue()));
+        EditorGUI.indentLevel++;
+        EditorGUILayout.LabelField("(Only when `Show Icons` is enabled)");
+        EditorGUI.indentLevel--;
         is_draw_highlights.SetValue(EditorGUILayout.ToggleLeft("Draw Highlights", is_draw_highlights.GetValue()));
         EditorGUI.indentLevel--;
 
@@ -282,7 +291,8 @@ public class VRChierarchyHighlighterEdit : EditorWindow
         EditorGUILayout.LabelField("Highlights Settings: ");
         EditorGUI.indentLevel++;
 
-        precision.SetValue(EditorGUILayout.Slider("Hue Precision", precision.GetValue(), 0.0f, 100.0f));
+        hue.SetValue(EditorGUILayout.Slider("Hue", hue.GetValue(), 0.0f, 1.0f));
+        precision.SetValue(EditorGUILayout.Slider("Hue Precision", precision.GetValue(), 0.0f, 1.0f));
         saturation.SetValue(EditorGUILayout.Slider("Saturation", saturation.GetValue(), 0.0f, 1.0f));
         value.SetValue(EditorGUILayout.Slider("Value", value.GetValue(), 0.0f, 1.0f));
         alpha.SetValue(EditorGUILayout.Slider("Alpha", alpha.GetValue(), 0.0f, 1.0f));
