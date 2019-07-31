@@ -89,8 +89,8 @@ public static class HierarchyIndentHelper
 
         if (VRChierarchyHighlighterEdit.is_draw_highlights.GetValue())
         {
-            var hue = ((float)(target_rect.x) / (float)(target_rect.xMax) 
-                * VRChierarchyHighlighterEdit.precision.GetValue()
+            var hue = ((float)(target_rect.x) 
+                * VRChierarchyHighlighterEdit.hue_offset.GetValue()
                 + VRChierarchyHighlighterEdit.hue.GetValue()) % 1.0f;
 
             var background_color = Color.HSVToRGB(
@@ -243,8 +243,8 @@ public class VRChierarchyHighlighterEdit : EditorWindow
         = new VHHParameter<float>(0.7f, "vhh.value", EditorPrefs.GetFloat, EditorPrefs.SetFloat);
     public static VHHParameter<float> hue
         = new VHHParameter<float>(0.3f, "vhh.hue", EditorPrefs.GetFloat, EditorPrefs.SetFloat);
-    public static VHHParameter<float> precision
-        = new VHHParameter<float>(1.0f, "vhh.precision", EditorPrefs.GetFloat, EditorPrefs.SetFloat);
+    public static VHHParameter<float> hue_offset
+        = new VHHParameter<float>(0.2f, "vhh.hue_offset", EditorPrefs.GetFloat, EditorPrefs.SetFloat);
     public static VHHParameter<float> alpha
         = new VHHParameter<float>(0.2f, "vhh.alpha", EditorPrefs.GetFloat, EditorPrefs.SetFloat);
 
@@ -255,7 +255,7 @@ public class VRChierarchyHighlighterEdit : EditorWindow
         is_draw_vers.Destroy();
         saturation.Destroy();
         value.Destroy();
-        precision.Destroy();
+        hue_offset.Destroy();
         hue.Destroy();
         alpha.Destroy();
     }
@@ -269,7 +269,7 @@ public class VRChierarchyHighlighterEdit : EditorWindow
             is_draw_icons.SetDefault();
             is_draw_highlights.SetDefault();
             is_draw_vers.SetDefault();
-            precision.SetDefault();
+            hue_offset.SetDefault();
             hue.SetDefault();
             saturation.SetDefault();
             value.SetDefault();
@@ -292,7 +292,7 @@ public class VRChierarchyHighlighterEdit : EditorWindow
         EditorGUI.indentLevel++;
 
         hue.SetValue(EditorGUILayout.Slider("Hue", hue.GetValue(), 0.0f, 1.0f));
-        precision.SetValue(EditorGUILayout.Slider("Hue Precision", precision.GetValue(), 0.0f, 1.0f));
+        hue_offset.SetValue(EditorGUILayout.Slider("Hue offset", hue_offset.GetValue(), 0.0f, 1.0f));
         saturation.SetValue(EditorGUILayout.Slider("Saturation", saturation.GetValue(), 0.0f, 1.0f));
         value.SetValue(EditorGUILayout.Slider("Value", value.GetValue(), 0.0f, 1.0f));
         alpha.SetValue(EditorGUILayout.Slider("Alpha", alpha.GetValue(), 0.0f, 1.0f));
