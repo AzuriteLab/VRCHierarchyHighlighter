@@ -44,9 +44,14 @@ public static class HierarchyIndentHelper
     private static readonly string[] kIconNames = {
         "DynamicBone",
         "DynamicBonePartial",
-        "SkinnedMeshRenderer",
         "MeshRenderer",
+        "SkinnedMeshRenderer",
         "VRC_AvatarDescriptor",
+        "AudioSource",
+        "Light",
+        "LightProbe",
+        "ReflectionProbe",
+        "VRC_MirrorReflection"
     };
 
     private static Dictionary<string, Texture2D> icon_resources_
@@ -89,7 +94,7 @@ public static class HierarchyIndentHelper
 
         if (VRChierarchyHighlighterEdit.is_draw_highlights.GetValue())
         {
-            var hue = ((float)(target_rect.x) 
+            var hue = ((float)(target_rect.x)
                 * VRChierarchyHighlighterEdit.hue_offset.GetValue()
                 + VRChierarchyHighlighterEdit.hue.GetValue()) % 1.0f;
 
@@ -139,10 +144,9 @@ public static class HierarchyIndentHelper
     {
         foreach (Component component in components)
         {
-            // SkinnedMeshRendererとMeshRendererのの関係で逆順にしないと楽にContainsで判定できない
             foreach (var icon_info in icon_resources_.Reverse())
             {
-                if (component != null && component.ToString().Contains(icon_info.Key))
+                if (component != null && component.GetType().Name.Contains(icon_info.Key))
                 {
                     var icon = icon_info.Value;
                     // DynamicBoneのm_Rootに対象となるTransformが設定されていない場合は専用のアイコンに切り替える
@@ -169,6 +173,7 @@ public static class HierarchyIndentHelper
                     {
                         PreviewVers_(component, target_rect);
                     }
+                    return;
                 }
             }
         }
@@ -196,7 +201,7 @@ public static class HierarchyIndentHelper
 
 public struct VHHParameter<T>
 {
-    public VHHParameter(T default_value, string signature, Func<string,T,T> init, Action<string, T> teardown)
+    public VHHParameter(T default_value, string signature, Func<string, T, T> init, Action<string, T> teardown)
     {
         default_value_ = default_value;
         signature_ = signature;
