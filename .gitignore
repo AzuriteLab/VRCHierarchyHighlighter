@@ -1,12 +1,12 @@
 */*/
 *.*
 
-!icons/
-!icons/*
-!*.txt
+!Editor/
+!Editor/*
+!Editor/Resources/
+!Editor/Resources/*
 !*.md
 !*.png
 !*.cs
-!*.unitypackage
 
 !*.gitignore
