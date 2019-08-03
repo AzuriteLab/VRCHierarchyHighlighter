@@ -150,7 +150,7 @@ public static class HierarchyIndentHelper
                 {
                     var icon = icon_info.Value;
                     // DynamicBoneのm_Rootに対象となるTransformが設定されていない場合は専用のアイコンに切り替える
-                    if (component.ToString().Contains("DynamicBone"))
+                    if (component.GetType().Name == "DynamicBone")
                     {
                         var db = (DynamicBone)component;
                         if (db.GetType().GetMember("m_Root").Count() > 0 && db.m_Root == null)
