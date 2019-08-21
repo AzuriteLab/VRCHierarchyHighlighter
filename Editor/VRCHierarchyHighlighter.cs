@@ -53,6 +53,7 @@ public static class HierarchyIndentHelper
         "ReflectionProbe",
         "VRC_MirrorReflection"
     };
+    private static readonly Type kDynamicBoneType = Type.GetType("DynamicBone, Assembly-CSharp");
 
     private static Dictionary<string, Texture2D> icon_resources_
         = new Dictionary<string, Texture2D>();
@@ -150,10 +151,9 @@ public static class HierarchyIndentHelper
                 {
                     var icon = icon_info.Value;
                     // DynamicBoneのm_Rootに対象となるTransformが設定されていない場合は専用のアイコンに切り替える
-                    if (component.GetType().Name == "DynamicBone")
+                    if (kDynamicBoneType != null && component.GetType() == kDynamicBoneType)
                     {
-                        var db = (DynamicBone)component;
-                        if (db.GetType().GetMember("m_Root").Count() > 0 && db.m_Root == null)
+                        if (kDynamicBoneType.GetField("m_Root").GetValue(component) == null)
                         {
                             icon = icon_resources_["DynamicBonePartial"];
                         }
