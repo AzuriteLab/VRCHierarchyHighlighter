@@ -34,6 +34,7 @@ using System.IO;
 
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public static class HierarchyIndentHelper
 {
@@ -44,6 +45,7 @@ public static class HierarchyIndentHelper
     private static readonly string[] kIconNames = {
         "DynamicBone",
         "DynamicBonePartial",
+        "DynamicBoneRoot",
         "DynamicBoneCollider",
         "MeshRenderer",
         "SkinnedMeshRenderer",
@@ -61,6 +63,8 @@ public static class HierarchyIndentHelper
 
     private static Dictionary<string, Texture2D> optional_icon_resources_
         = new Dictionary<string, Texture2D>();
+
+    private static IEnumerable<Transform> dynamic_bone_roots_ = new List<Transform>();
 
     private static Texture2D LoadIconTex2DFromPNG(string path)
     {
@@ -131,8 +135,21 @@ public static class HierarchyIndentHelper
             var obj = EditorUtility.InstanceIDToObject(instance_id) as GameObject;
             if (obj != null)
             {
+                // シーンの最初のGameObjectであれば、シーン全体のDynamicBoneのm_Rootを取得する
+                if (kDynamicBoneType != null)
+                {
+                    var rootGameObjects = SceneManager.GetActiveScene().GetRootGameObjects();
+                    if (rootGameObjects.FirstOrDefault() == obj)
+                    {
+                        dynamic_bone_roots_ = rootGameObjects
+                            .SelectMany(root => root.GetComponentsInChildren(kDynamicBoneType))
+                            .Select(db => kDynamicBoneType.GetField("m_Root").GetValue(db) as Transform)
+                            .Where(db_root => db_root != null);
+                    }
+                }
+
                 var components = obj.GetComponents(typeof(Component));
-                if (components != null)
+                if (components.Length > 0)
                 {
                     DrawIcons_(components, target_rect);
                 }
@@ -144,6 +161,13 @@ public static class HierarchyIndentHelper
 
     private static void DrawIcons_(Component[] components, Rect target_rect)
     {
+        // DynamicBoneのm_Rootの対象となるGameObject
+        if (dynamic_bone_roots_.Contains(components[0].transform))
+        {
+            DrawIcon_(icon_resources_["DynamicBoneRoot"], target_rect);
+            return;
+        }
+
         foreach (Component component in components)
         {
             foreach (var icon_info in icon_resources_.Reverse())
@@ -160,15 +184,7 @@ public static class HierarchyIndentHelper
                         }
                     }
 
-                    Color boxcolor = Color.white;
-                    GUI.color = boxcolor;
-
-                    target_rect.x = 0;
-                    target_rect.xMax = target_rect.xMax;
-                    target_rect.width = kIconSize;
-                    target_rect.height = kIconSize;
-
-                    GUI.Label(target_rect, icon);
+                    DrawIcon_(icon, target_rect);
 
                     if (VRChierarchyHighlighterEdit.is_draw_vers.GetValue())
                     {
@@ -178,6 +194,19 @@ public static class HierarchyIndentHelper
                 }
             }
         }
+    }
+
+    private static void DrawIcon_(Texture2D icon, Rect target_rect)
+    {
+        Color boxcolor = Color.white;
+        GUI.color = boxcolor;
+
+        target_rect.x = 0;
+        target_rect.xMax = target_rect.xMax;
+        target_rect.width = kIconSize;
+        target_rect.height = kIconSize;
+
+        GUI.Label(target_rect, icon);
     }
 
     private static void PreviewVers_(Component component, Rect target_rect)
