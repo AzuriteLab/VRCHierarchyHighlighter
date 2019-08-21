@@ -44,6 +44,7 @@ public static class HierarchyIndentHelper
     private static readonly string[] kIconNames = {
         "DynamicBone",
         "DynamicBonePartial",
+        "DynamicBoneCollider",
         "MeshRenderer",
         "SkinnedMeshRenderer",
         "VRC_AvatarDescriptor",
