@@ -1,12 +1,9 @@
 */*/
 *.*
 
-!Editor/
-!Editor/*
-!Editor/Resources/
-!Editor/Resources/*
 !*.md
 !*.png
 !*.cs
 
 !*.gitignore
+!*.gitattributes
