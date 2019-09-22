@@ -1,4 +1,4 @@
-﻿/*  ヒエラルキを階層別に色分けするのと、VRC向けの重要コンポーネントがある場合にアイコンで可視化するやつ
+/*  ヒエラルキを階層別に色分けするのと、VRC向けの重要コンポーネントがある場合にアイコンで可視化するやつ
  * 
  *  see also: http://baba-s.hatenablog.com/entry/2015/05/09/122713
  */
@@ -59,9 +59,6 @@ public static class HierarchyIndentHelper
     private static readonly Type kDynamicBoneType = Type.GetType("DynamicBone, Assembly-CSharp");
 
     private static Dictionary<string, Texture2D> icon_resources_
-        = new Dictionary<string, Texture2D>();
-
-    private static Dictionary<string, Texture2D> optional_icon_resources_
         = new Dictionary<string, Texture2D>();
 
     private static IEnumerable<Transform> dynamic_bone_roots_ = new List<Transform>();
