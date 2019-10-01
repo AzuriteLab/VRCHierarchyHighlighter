@@ -42,19 +42,20 @@ public static class HierarchyIndentHelper
     private const string kResourceDirPath = "Assets/VRCHierarchyHighlighter/Editor/Resources/";
     private const string kResourceSuffix = ".png";
     private const int kIconSize = 20;
-    private static readonly string[] kIconNames = {
-        "DynamicBone",
-        "DynamicBonePartial",
-        "DynamicBoneRoot",
-        "DynamicBoneCollider",
-        "MeshRenderer",
-        "SkinnedMeshRenderer",
-        "VRC_AvatarDescriptor",
-        "AudioSource",
-        "Light",
-        "LightProbe",
-        "ReflectionProbe",
-        "VRC_MirrorReflection"
+    private static readonly IDictionary<string, Type> kIconNamesAndTypes = new Dictionary<string, Type>()
+    {
+        { "DynamicBone", null },
+        { "DynamicBonePartial", null },
+        { "DynamicBoneRoot", null },
+        { "DynamicBoneCollider", null },
+        { "MeshRenderer", typeof(MeshRenderer) },
+        { "SkinnedMeshRenderer", typeof(SkinnedMeshRenderer) },
+        { "VRC_AvatarDescriptor", null },
+        { "AudioSource", typeof(AudioSource) },
+        { "Light", typeof(Light) },
+        { "LightProbe", typeof(LightProbes) },
+        { "ReflectionProbe", typeof(ReflectionProbe) },
+        { "VRC_MirrorReflection", null },
     };
     private static readonly Type kDynamicBoneType = Type.GetType("DynamicBone, Assembly-CSharp");
 
@@ -77,12 +78,13 @@ public static class HierarchyIndentHelper
 
     private static void SetupIcons()
     {
-        foreach (string name in kIconNames)
+        foreach (var nameAndType in kIconNamesAndTypes)
         {
-            string filepath = kResourceDirPath + name + kResourceSuffix;
-            Texture2D icon = LoadIconTex2DFromPNG(filepath);
-            icon_resources_.Remove(name);
-            icon_resources_.Add(name, icon);
+            Texture2D icon = nameAndType.Value != null
+                ? EditorGUIUtility.ObjectContent(null, nameAndType.Value).image as Texture2D
+                : LoadIconTex2DFromPNG(kResourceDirPath + nameAndType.Key + kResourceSuffix);
+            icon_resources_.Remove(nameAndType.Key);
+            icon_resources_.Add(nameAndType.Key, icon);
         }
     }
 
@@ -125,7 +127,7 @@ public static class HierarchyIndentHelper
         if (VRChierarchyHighlighterEdit.is_draw_icons.GetValue())
         {
             int cnt = icon_resources_.Count;
-            if (icon_resources_[kIconNames[0]] == null)
+            if (icon_resources_[kIconNamesAndTypes.First().Key] == null)
             {
                 // 実行モードに移行して戻ると何故かメンバの中身が初期化されてしまうので再セットアップ
                 // 少数のテクスチャをメインスレッドで読み込むので状況によっては一瞬ラグるかもしれない
