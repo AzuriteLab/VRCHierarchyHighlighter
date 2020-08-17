@@ -42,6 +42,8 @@ public static class HierarchyIndentHelper
     private const string kResourceDirPath = "Assets/VRCHierarchyHighlighter/Editor/Resources/";
     private const string kResourceSuffix = ".png";
     private const int kIconSize = 20;
+    // TODO SDK2とSDK3で名前空間が異なるため、それぞれのコンポーネント名を区別するようにする。現状は省略された形で応急的に対応している
+    // TODO SDKに含まれるMirror prefabを使ってしまうと、MeshRendererが優先されてしまう。アイコンの適用方法をコンポーネント名を一旦キャッシュするなどして変更する必要がある
     private static readonly IDictionary<string, Type> kIconNamesAndTypes = new Dictionary<string, Type>()
     {
         { "DynamicBone", null },
@@ -50,12 +52,12 @@ public static class HierarchyIndentHelper
         { "DynamicBoneCollider", null },
         { "MeshRenderer", typeof(MeshRenderer) },
         { "SkinnedMeshRenderer", typeof(SkinnedMeshRenderer) },
-        { "VRC_AvatarDescriptor", null },
+        { "AvatarDescriptor", null },
         { "AudioSource", typeof(AudioSource) },
         { "Light", typeof(Light) },
         { "LightProbe", typeof(LightProbes) },
         { "ReflectionProbe", typeof(ReflectionProbe) },
-        { "VRC_MirrorReflection", null },
+        { "MirrorReflection", null },
     };
     private static readonly Type kDynamicBoneType = Type.GetType("DynamicBone, Assembly-CSharp");
 

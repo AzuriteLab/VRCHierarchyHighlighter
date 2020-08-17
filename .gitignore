@@ -4,6 +4,12 @@
 !*.md
 !*.png
 !*.cs
+LICENSE
 
 !*.gitignore
 !*.gitattributes
+
+!Editor/
+!Editor/*
+!Editor/Resources/
+!Editor/Resources/*
