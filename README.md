@@ -4,8 +4,8 @@
 VRCで扱う重要コンポーネントをアイコンで表示するやつです。
 
 対応コンポーネントは、
-* VRC_AvaterDescriptor
-* VRC_MirrorReflection
+* VRC_AvaterDescriptor(or VRC.SDK3.Components.VRCAvaterDescriptor)
+* VRC_MirrorReflection(or VRC.SDK3.Components.VRCMirrorReflection)
 * MeshRenderer
 * SkinnedMeshRenderer
 * DynamicBone
@@ -40,6 +40,10 @@ BOOTHまたはgithubのリリースページからダウンロードしたunityp
 ## 更新履歴
 
 ```
+2020.08.17.0
+    SDK3（Avaters, Worlds）ではコンポーネントの名前空間及び名称が変更されているため、それに対応する変更を行いました。
+    この変更は応急的なものであり、他の場所で `MirrorRefrection` や `AvaterDescriptor` といったコンポーネントを定義していた場合は影響が及ぶ場合があります。
+
 2018.10.17.0
 	マージしたPRの変更点が反映されたバージョンです
 	このバージョンには
