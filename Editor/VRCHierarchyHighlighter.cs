@@ -53,6 +53,7 @@ public static class HierarchyIndentHelper
         { "MeshRenderer", typeof(MeshRenderer) },
         { "SkinnedMeshRenderer", typeof(SkinnedMeshRenderer) },
         { "AvatarDescriptor", null },
+        { "VRC Avatar Descriptor", null },
         { "AudioSource", typeof(AudioSource) },
         { "Light", typeof(Light) },
         { "LightProbe", typeof(LightProbes) },
