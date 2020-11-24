@@ -127,6 +127,11 @@ public static class HierarchyIndentHelper
             var rect = target_rect;
             rect.x = target_rect.x;
             rect.xMax = target_rect.xMax;
+            if (VRChierarchyHighlighterEdit.is_underline_mode.GetValue())
+            {
+                rect.yMin += (rect.height - 2);
+            }
+
             GUI.Box(rect, "");
         }
 
@@ -276,6 +281,8 @@ public class VRChierarchyHighlighterEdit : EditorWindow
         = new VHHParameter<bool>(true, "vhh.is_draw_highlights", EditorPrefs.GetBool, EditorPrefs.SetBool);
     public static VHHParameter<bool> is_draw_vers
         = new VHHParameter<bool>(false, "vhh.is_draw_vers", EditorPrefs.GetBool, EditorPrefs.SetBool);
+    public static VHHParameter<bool> is_underline_mode
+        = new VHHParameter<bool>(false, "vhh.is_underline_mode", EditorPrefs.GetBool, EditorPrefs.SetBool);
     public static VHHParameter<float> saturation
         = new VHHParameter<float>(0.7f, "vhh.saturation", EditorPrefs.GetFloat, EditorPrefs.SetFloat);
     public static VHHParameter<float> value
@@ -292,6 +299,7 @@ public class VRChierarchyHighlighterEdit : EditorWindow
         is_draw_icons.Destroy();
         is_draw_highlights.Destroy();
         is_draw_vers.Destroy();
+        is_underline_mode.Destroy();
         saturation.Destroy();
         value.Destroy();
         hue_offset.Destroy();
@@ -308,6 +316,7 @@ public class VRChierarchyHighlighterEdit : EditorWindow
             is_draw_icons.SetDefault();
             is_draw_highlights.SetDefault();
             is_draw_vers.SetDefault();
+            is_underline_mode.SetDefault();
             hue_offset.SetDefault();
             hue.SetDefault();
             saturation.SetDefault();
@@ -335,6 +344,9 @@ public class VRChierarchyHighlighterEdit : EditorWindow
         saturation.SetValue(EditorGUILayout.Slider("Saturation", saturation.GetValue(), 0.0f, 1.0f));
         value.SetValue(EditorGUILayout.Slider("Value", value.GetValue(), 0.0f, 1.0f));
         alpha.SetValue(EditorGUILayout.Slider("Alpha", alpha.GetValue(), 0.0f, 1.0f));
+
+        is_underline_mode.SetValue(EditorGUILayout.ToggleLeft("Underline Mode", is_underline_mode.GetValue()));
+
         EditorGUI.indentLevel--;
 
         if (EditorGUI.EndChangeCheck())
