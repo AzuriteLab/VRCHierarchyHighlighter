@@ -38,6 +38,7 @@ using UnityEngine.SceneManagement;
 
 public static class HierarchyIndentHelper
 {
+    public const string kVersion = "2020.11.25.0";
 
     private const string kResourceDirPath = "Assets/VRCHierarchyHighlighter/Editor/Resources/";
     private const string kResourceSuffix = ".png";
@@ -102,6 +103,14 @@ public static class HierarchyIndentHelper
         if (obj == null)
         {
             return;
+        }
+
+        if (VRChierarchyHighlighterEdit.use_active_checkbox.GetValue())
+        {
+            Rect checkbox_rect = new Rect(target_rect);
+            checkbox_rect.width = kIconSize;
+            checkbox_rect.x = target_rect.xMax;
+            obj.SetActive(GUI.Toggle(checkbox_rect, obj.activeSelf, string.Empty));
         }
 
         var color = GUI.color;
@@ -283,6 +292,10 @@ public class VRChierarchyHighlighterEdit : EditorWindow
         = new VHHParameter<bool>(false, "vhh.is_draw_vers", EditorPrefs.GetBool, EditorPrefs.SetBool);
     public static VHHParameter<bool> is_underline_mode
         = new VHHParameter<bool>(false, "vhh.is_underline_mode", EditorPrefs.GetBool, EditorPrefs.SetBool);
+    public static VHHParameter<bool> is_dark_mode
+        = new VHHParameter<bool>(false, "vhh.is_dark_mode", EditorPrefs.GetBool, EditorPrefs.SetBool);
+    public static VHHParameter<bool> use_active_checkbox
+        = new VHHParameter<bool>(false, "vhh.use_active_checkbox", EditorPrefs.GetBool, EditorPrefs.SetBool);
     public static VHHParameter<float> saturation
         = new VHHParameter<float>(0.7f, "vhh.saturation", EditorPrefs.GetFloat, EditorPrefs.SetFloat);
     public static VHHParameter<float> value
@@ -299,7 +312,9 @@ public class VRChierarchyHighlighterEdit : EditorWindow
         is_draw_icons.Destroy();
         is_draw_highlights.Destroy();
         is_draw_vers.Destroy();
+        is_dark_mode.Destroy();
         is_underline_mode.Destroy();
+        use_active_checkbox.Destroy();
         saturation.Destroy();
         value.Destroy();
         hue_offset.Destroy();
@@ -317,6 +332,8 @@ public class VRChierarchyHighlighterEdit : EditorWindow
             is_draw_highlights.SetDefault();
             is_draw_vers.SetDefault();
             is_underline_mode.SetDefault();
+            is_dark_mode.SetDefault();
+            use_active_checkbox.SetDefault();
             hue_offset.SetDefault();
             hue.SetDefault();
             saturation.SetDefault();
@@ -332,6 +349,7 @@ public class VRChierarchyHighlighterEdit : EditorWindow
         EditorGUILayout.LabelField("(Only when `Show Icons` is enabled)");
         EditorGUI.indentLevel--;
         is_draw_highlights.SetValue(EditorGUILayout.ToggleLeft("Draw Highlights", is_draw_highlights.GetValue()));
+        use_active_checkbox.SetValue(EditorGUILayout.ToggleLeft("Enable Active Checkbox", use_active_checkbox.GetValue()));
         EditorGUI.indentLevel--;
 
         EditorGUILayout.Separator();
@@ -346,8 +364,13 @@ public class VRChierarchyHighlighterEdit : EditorWindow
         alpha.SetValue(EditorGUILayout.Slider("Alpha", alpha.GetValue(), 0.0f, 1.0f));
 
         is_underline_mode.SetValue(EditorGUILayout.ToggleLeft("Underline Mode", is_underline_mode.GetValue()));
+        is_dark_mode.SetValue(EditorGUILayout.ToggleLeft("[Reserve] Dark Mode (Unity Pro, Unity 2019 or later)", is_dark_mode.GetValue()));
 
         EditorGUI.indentLevel--;
+
+        EditorGUILayout.LabelField(" ");
+        EditorGUILayout.LabelField("---");
+        EditorGUILayout.LabelField("Version: " + HierarchyIndentHelper.kVersion);
 
         if (EditorGUI.EndChangeCheck())
         {
