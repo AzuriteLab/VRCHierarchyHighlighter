@@ -98,6 +98,12 @@ public static class HierarchyIndentHelper
     private static void OnHierarchyWindowItemOnGUI
     (int instance_id, Rect target_rect)
     {
+        var obj = EditorUtility.InstanceIDToObject(instance_id) as GameObject;
+        if (obj == null)
+        {
+            return;
+        }
+
         var color = GUI.color;
 
         if (VRChierarchyHighlighterEdit.is_draw_highlights.GetValue())
@@ -134,27 +140,23 @@ public static class HierarchyIndentHelper
                 SetupIcons();
             }
 
-            var obj = EditorUtility.InstanceIDToObject(instance_id) as GameObject;
-            if (obj != null)
+            // シーンの最初のGameObjectであれば、シーン全体のDynamicBoneのm_Rootを取得する
+            if (kDynamicBoneType != null)
             {
-                // シーンの最初のGameObjectであれば、シーン全体のDynamicBoneのm_Rootを取得する
-                if (kDynamicBoneType != null)
+                var rootGameObjects = SceneManager.GetActiveScene().GetRootGameObjects();
+                if (rootGameObjects.FirstOrDefault() == obj)
                 {
-                    var rootGameObjects = SceneManager.GetActiveScene().GetRootGameObjects();
-                    if (rootGameObjects.FirstOrDefault() == obj)
-                    {
-                        dynamic_bone_roots_ = rootGameObjects
-                            .SelectMany(root => root.GetComponentsInChildren(kDynamicBoneType))
-                            .Select(db => kDynamicBoneType.GetField("m_Root").GetValue(db) as Transform)
-                            .Where(db_root => db_root != null);
-                    }
+                    dynamic_bone_roots_ = rootGameObjects
+                        .SelectMany(root => root.GetComponentsInChildren(kDynamicBoneType))
+                        .Select(db => kDynamicBoneType.GetField("m_Root").GetValue(db) as Transform)
+                        .Where(db_root => db_root != null);
                 }
+            }
 
-                var components = obj.GetComponents(typeof(Component));
-                if (components.Length > 0)
-                {
-                    DrawIcons_(components, target_rect);
-                }
+            var components = obj.GetComponents(typeof(Component));
+            if (components.Length > 0)
+            {
+                DrawIcons_(components, target_rect);
             }
         }
 
