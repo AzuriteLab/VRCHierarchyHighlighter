@@ -6,7 +6,7 @@
 /*
 The MIT License (MIT)
 
-Copyright (c) 2019 AzuriteLab
+Copyright (c) 2019-2021 AzuriteLab
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -38,7 +38,7 @@ using UnityEngine.SceneManagement;
 
 public static class HierarchyIndentHelper
 {
-    public const string kVersion = "2020.12.26.0";
+    public const string kVersion = "2021.07.27.0";
 
     private const string kResourceDirPath = "Assets/VRCHierarchyHighlighter/Editor/Resources/";
     private const string kResourceSuffix = ".png";
@@ -121,14 +121,6 @@ public static class HierarchyIndentHelper
             return;
         }
 
-        if (VRChierarchyHighlighterEdit.use_active_checkbox.GetValue())
-        {
-            Rect checkbox_rect = new Rect(target_rect);
-            checkbox_rect.width = kIconSize;
-            checkbox_rect.x = target_rect.xMax;
-            obj.SetActive(GUI.Toggle(checkbox_rect, obj.activeSelf, string.Empty));
-        }
-
         var color = GUI.color;
 
         if (VRChierarchyHighlighterEdit.is_draw_highlights.GetValue())
@@ -151,7 +143,7 @@ public static class HierarchyIndentHelper
 
             var rect = target_rect;
             rect.x = target_rect.x;
-            rect.xMax = target_rect.xMax;
+            rect.xMax = target_rect.xMax - kIconSize;
             if (VRChierarchyHighlighterEdit.is_underline_mode.GetValue())
             {
                 rect.yMin += (rect.height - 2);
@@ -235,8 +227,7 @@ public static class HierarchyIndentHelper
         Color boxcolor = Color.white;
         GUI.color = boxcolor;
 
-        target_rect.x = 0;
-        target_rect.xMax = target_rect.xMax;
+        target_rect.x = target_rect.xMax - kIconSize;
         target_rect.width = kIconSize;
         target_rect.height = kIconSize;
 
