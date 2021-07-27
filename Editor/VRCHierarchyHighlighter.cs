@@ -37,9 +37,16 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
+public enum HighlightMode
+{
+    Fill = 0,
+    Under = 1,
+    Left = 2
+}
+
 public static class HierarchyIndentHelper
 {
-    public const string kVersion = "2021.07.27.0";
+    public const string kVersion = "2021.07.28.0";
 
     private const string kResourceDirPath = "Assets/VRCHierarchyHighlighter/Editor/Resources/";
     private const string kResourceSuffix = ".png";
@@ -162,9 +169,17 @@ public static class HierarchyIndentHelper
             var rect = target_rect;
             rect.x = target_rect.x;
             rect.xMax = target_rect.xMax - kIconSize;
-            if (VRChierarchyHighlighterEdit.is_underline_mode.GetValue())
+
+            var mode = VRChierarchyHighlighterEdit.highlight_mode.GetValue();
+            switch(mode)
             {
-                rect.yMin += (rect.height - 2);
+                case HighlightMode.Under:
+                    rect.yMin += (rect.height - 2);
+                    break;
+                case HighlightMode.Left:
+                    rect.xMax = target_rect.x;
+                    rect.xMin += (rect.width - 2);
+                    break;
             }
 
             GUI.Box(rect, "");
@@ -327,6 +342,16 @@ public class VRChierarchyHighlighterEdit : EditorWindow
         return () => value;
     }
 
+    static private HighlightMode GetHighlightMode(string key, HighlightMode defaultValue)
+    {
+        return (HighlightMode)EditorPrefs.GetInt(key, (int)defaultValue);
+    }
+
+    static private void SetHighlightMode(string key, HighlightMode value)
+    {
+        EditorPrefs.SetInt(key, (int)value);
+    }
+
     public static VHHParameter<bool> is_draw_icons
         = new VHHParameter<bool>(SetDefault_(true), "vhh.is_draw_icons", EditorPrefs.GetBool, EditorPrefs.SetBool);
     public static VHHParameter<bool> is_draw_toggle_icons
@@ -335,8 +360,6 @@ public class VRChierarchyHighlighterEdit : EditorWindow
         = new VHHParameter<bool>(SetDefault_(true), "vhh.is_draw_highlights", EditorPrefs.GetBool, EditorPrefs.SetBool);
     public static VHHParameter<bool> is_draw_vers
         = new VHHParameter<bool>(SetDefault_(false), "vhh.is_draw_vers", EditorPrefs.GetBool, EditorPrefs.SetBool);
-    public static VHHParameter<bool> is_underline_mode
-        = new VHHParameter<bool>(SetDefault_(for_std: false, for_pro: true), "vhh.is_underline_mode", EditorPrefs.GetBool, EditorPrefs.SetBool);
     public static VHHParameter<bool> is_dark_mode
         = new VHHParameter<bool>(SetDefault_(for_std: false, for_pro: true), "vhh.is_dark_mode", EditorPrefs.GetBool, EditorPrefs.SetBool);
     public static VHHParameter<bool> use_active_checkbox
@@ -351,6 +374,8 @@ public class VRChierarchyHighlighterEdit : EditorWindow
         = new VHHParameter<float>(SetDefault_(for_std: 0.2f, for_pro: 0.2f), "vhh.hue_offset", EditorPrefs.GetFloat, EditorPrefs.SetFloat);
     public static VHHParameter<float> alpha
         = new VHHParameter<float>(SetDefault_(for_std: 0.2f, for_pro: 1.0f), "vhh.alpha", EditorPrefs.GetFloat, EditorPrefs.SetFloat);
+    public static VHHParameter<HighlightMode> highlight_mode
+        = new VHHParameter<HighlightMode>(SetDefault_(for_std: HighlightMode.Fill, for_pro: HighlightMode.Under), "vhh.highlight_mode", GetHighlightMode, SetHighlightMode);
 
     static public void SetDefaultAllParameters()
     {
@@ -358,7 +383,6 @@ public class VRChierarchyHighlighterEdit : EditorWindow
         is_draw_highlights.SetDefault();
         is_draw_toggle_icons.SetDefault();
         is_draw_vers.SetDefault();
-        is_underline_mode.SetDefault();
         is_dark_mode.SetDefault();
         use_active_checkbox.SetDefault();
         hue_offset.SetDefault();
@@ -366,6 +390,7 @@ public class VRChierarchyHighlighterEdit : EditorWindow
         saturation.SetDefault();
         value.SetDefault();
         alpha.SetDefault();
+        highlight_mode.SetDefault();
     }
 
     private void OnDestroy()
@@ -375,13 +400,13 @@ public class VRChierarchyHighlighterEdit : EditorWindow
         is_draw_toggle_icons.Destroy();
         is_draw_vers.Destroy();
         is_dark_mode.Destroy();
-        is_underline_mode.Destroy();
         use_active_checkbox.Destroy();
         saturation.Destroy();
         value.Destroy();
         hue_offset.Destroy();
         hue.Destroy();
         alpha.Destroy();
+        highlight_mode.Destroy();
     }
 
     void OnGUI()
@@ -421,7 +446,7 @@ public class VRChierarchyHighlighterEdit : EditorWindow
         value.SetValue(EditorGUILayout.Slider("Value", value.GetValue(), 0.0f, 10.0f));
         alpha.SetValue(EditorGUILayout.Slider("Alpha", alpha.GetValue(), 0.0f, 2.0f));
 
-        is_underline_mode.SetValue(EditorGUILayout.ToggleLeft("Underline Mode", is_underline_mode.GetValue()));
+        highlight_mode.SetValue((HighlightMode)EditorGUILayout.EnumPopup("Highlight Mode : ", highlight_mode.GetValue()));
 
         EditorGUI.indentLevel--;
 
