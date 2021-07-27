@@ -269,9 +269,10 @@ public static class HierarchyIndentHelper
 
         var rect = EditorGUILayout.GetControlRect();
 
-        Color boxcolor = Color.black;
-        GUI.color = boxcolor;
-        target_rect.x = rect.xMax - 80; // 右寄せにする場合
+        Color boxcolor = EditorGUIUtility.isProSkin ? Color.white : Color.black;
+        GUI.color = Color.white;
+
+        target_rect.x = rect.xMax - 80 - kIconSize; // 右寄せにする場合
         target_rect.width = 100;
         target_rect.height = kIconSize;
 
