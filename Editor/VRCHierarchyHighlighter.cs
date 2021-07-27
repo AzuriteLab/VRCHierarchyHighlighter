@@ -28,6 +28,7 @@ THE SOFTWARE.
 */
 
 using System;
+using System.Reflection;
 using System.Linq;
 using System.Collections.Generic;
 using System.IO;
@@ -60,6 +61,9 @@ public static class HierarchyIndentHelper
         { "LightProbe", typeof(LightProbes) },
         { "ReflectionProbe", typeof(ReflectionProbe) },
         { "MirrorReflection", null },
+        //
+        { "InactiveObject", null },
+        { "ToggleActiveObject", null },
     };
     private static readonly Type kDynamicBoneType = Type.GetType("DynamicBone, Assembly-CSharp");
 
@@ -121,6 +125,20 @@ public static class HierarchyIndentHelper
             return;
         }
 
+        Rect icon_rect = target_rect;
+        icon_rect.y -= 2;
+        icon_rect.x = target_rect.xMax - kIconSize;
+        icon_rect.width = kIconSize;
+        icon_rect.height = kIconSize;
+
+        Event ev = Event.current;
+        if (VRChierarchyHighlighterEdit.use_active_checkbox.GetValue() && ev.type == EventType.MouseUp)
+        {
+            if (icon_rect.Contains(Event.current.mousePosition)) {
+                obj.SetActive(!obj.activeSelf);
+            }
+        }
+
         var color = GUI.color;
 
         if (VRChierarchyHighlighterEdit.is_draw_highlights.GetValue())
@@ -175,11 +193,19 @@ public static class HierarchyIndentHelper
                 }
             }
 
+            target_rect.y -= 2;
+
             var components = obj.GetComponents(typeof(Component));
-            if (components.Length > 0)
-            {
+            if (components.Length > 0) {
                 DrawIcons_(components, target_rect);
             }
+            if (!obj.activeSelf) {
+                DrawIcon_(icon_resources_["InactiveObject"], target_rect);
+            }
+        }
+
+        if (VRChierarchyHighlighterEdit.is_draw_toggle_icons.GetValue() && icon_rect.Contains(ev.mousePosition)) {
+            DrawIcon_(icon_resources_["ToggleActiveObject"], target_rect);
         }
 
         GUI.color = color;
@@ -302,6 +328,8 @@ public class VRChierarchyHighlighterEdit : EditorWindow
 
     public static VHHParameter<bool> is_draw_icons
         = new VHHParameter<bool>(SetDefault_(true), "vhh.is_draw_icons", EditorPrefs.GetBool, EditorPrefs.SetBool);
+    public static VHHParameter<bool> is_draw_toggle_icons
+        = new VHHParameter<bool>(SetDefault_(true), "vhh.is_draw_toggle_icons", EditorPrefs.GetBool, EditorPrefs.SetBool);
     public static VHHParameter<bool> is_draw_highlights
         = new VHHParameter<bool>(SetDefault_(true), "vhh.is_draw_highlights", EditorPrefs.GetBool, EditorPrefs.SetBool);
     public static VHHParameter<bool> is_draw_vers
@@ -327,6 +355,7 @@ public class VRChierarchyHighlighterEdit : EditorWindow
     {
         is_draw_icons.SetDefault();
         is_draw_highlights.SetDefault();
+        is_draw_toggle_icons.SetDefault();
         is_draw_vers.SetDefault();
         is_underline_mode.SetDefault();
         is_dark_mode.SetDefault();
@@ -342,6 +371,7 @@ public class VRChierarchyHighlighterEdit : EditorWindow
     {
         is_draw_icons.Destroy();
         is_draw_highlights.Destroy();
+        is_draw_toggle_icons.Destroy();
         is_draw_vers.Destroy();
         is_dark_mode.Destroy();
         is_underline_mode.Destroy();
@@ -370,7 +400,13 @@ public class VRChierarchyHighlighterEdit : EditorWindow
         EditorGUILayout.LabelField("(Only when `Show Icons` is enabled)");
         EditorGUI.indentLevel--;
         is_draw_highlights.SetValue(EditorGUILayout.ToggleLeft("Draw Highlights", is_draw_highlights.GetValue()));
-        use_active_checkbox.SetValue(EditorGUILayout.ToggleLeft("Enable Active Checkbox", use_active_checkbox.GetValue()));
+        use_active_checkbox.SetValue(EditorGUILayout.ToggleLeft("Enable Object Toggle Checkbox", use_active_checkbox.GetValue()));
+        EditorGUI.indentLevel++;
+        is_draw_toggle_icons.SetValue(EditorGUILayout.ToggleLeft("Show Toggle Icons", is_draw_toggle_icons.GetValue()));
+        EditorGUI.indentLevel--;
+        if (use_active_checkbox.GetValue() == false) {
+            is_draw_toggle_icons.SetValue(false);
+        }
         EditorGUI.indentLevel--;
 
         EditorGUILayout.Separator();
