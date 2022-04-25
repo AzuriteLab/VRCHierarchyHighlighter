@@ -37,7 +37,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-#if VRC_SDK_VRCSDK3
+#if (VRC_SDK_VRCSDK3 && !UDON)
 using VRC.Dynamics;
 using VRC.SDK3.Dynamics.PhysBone.Components;
 #endif
@@ -131,7 +131,11 @@ public static class HierarchyIndentHelper
             VRChierarchyHighlighterEdit.SetDefaultAllParameters();
         }
 
+
         EditorApplication.hierarchyWindowItemOnGUI += OnHierarchyWindowItemOnGUI;
+        EditorApplication.hierarchyWindowChanged += () =>
+        {
+        };
     }
 
     private static void OnHierarchyWindowItemOnGUI
@@ -262,7 +266,7 @@ public static class HierarchyIndentHelper
                         }
                     }
 
-#if VRC_SDK_VRCSDK3
+#if (VRC_SDK_VRCSDK3 && !UDON)
                     // PBがアタッチされていたら専用のアイコンに切り替える. rootTransformが設定されていない場合は警告用のアイコンを表示する
                     foreach (var pb in component.GetComponents<VRCPhysBone>().Where(obj => obj != null))
                     {

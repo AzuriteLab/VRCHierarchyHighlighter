@@ -41,6 +41,10 @@ BOOTHまたはgithubのリリースページからダウンロードしたunityp
 ## 更新履歴
 
 ```
+2022.04.25.1
+    * [VRChat] Physics Bone対応修正
+      * ワールド向けSDKにはPhysBoneコンポーネントが現状含まれないようなので、突貫で動作するよう修正しました
+      
 2022.04.25.0
     * [VRChat] Physics Bone対応
       * VRCPhysBone, VRCPhysBoneCollider用のアイコンを用意し, 描画するようにしました.
