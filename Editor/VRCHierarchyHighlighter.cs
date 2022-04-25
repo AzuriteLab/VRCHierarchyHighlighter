@@ -37,6 +37,11 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
+#if VRC_SDK_VRCSDK3
+using VRC.Dynamics;
+using VRC.SDK3.Dynamics.PhysBone.Components;
+#endif
+
 public enum HighlightMode
 {
     Fill = 0,
@@ -46,19 +51,25 @@ public enum HighlightMode
 
 public static class HierarchyIndentHelper
 {
-    public const string kVersion = "2021.07.28.0";
+    public const string kVersion = "2022.04.25.0";
 
     private const string kResourceDirPath = "Assets/VRCHierarchyHighlighter/Editor/Resources/";
-    private const string kResourceSuffix = ".png";
+    private const string kResourceSuffix = ".png"; 
     private const int kIconSize = 20;
     // TODO SDK2とSDK3で名前空間が異なるため、それぞれのコンポーネント名を区別するようにする。現状は省略された形で応急的に対応している
     // TODO SDKに含まれるMirror prefabを使ってしまうと、MeshRendererが優先されてしまう。アイコンの適用方法をコンポーネント名を一旦キャッシュするなどして変更する必要がある
     private static readonly IDictionary<string, Type> kIconNamesAndTypes = new Dictionary<string, Type>()
     {
+        { "VRCPhysBone", null },
+        { "VRCPhysBoneCollider", null },
+        { "VRCPhysBonePartial", null },
+        { "VRCPhysBoneRoot", null },
+
         { "DynamicBone", null },
         { "DynamicBonePartial", null },
         { "DynamicBoneRoot", null },
         { "DynamicBoneCollider", null },
+
         { "MeshRenderer", typeof(MeshRenderer) },
         { "SkinnedMeshRenderer", typeof(SkinnedMeshRenderer) },
         { "AvatarDescriptor", null },
@@ -195,7 +206,7 @@ public static class HierarchyIndentHelper
                 SetupIcons();
             }
 
-            // シーンの最初のGameObjectであれば、シーン全体のDynamicBoneのm_Rootを取得する
+            // シーンの最初のGameObjectであれば、シーン全体のDynamicBoneのm_Rootを取得する 
             if (kDynamicBoneType != null)
             {
                 var rootGameObjects = SceneManager.GetActiveScene().GetRootGameObjects();
@@ -242,7 +253,7 @@ public static class HierarchyIndentHelper
                 if (component != null && component.GetType().Name.Contains(icon_info.Key))
                 {
                     var icon = icon_info.Value;
-                    // DynamicBoneのm_Rootに対象となるTransformが設定されていない場合は専用のアイコンに切り替える
+                    // DynamicBoneのm_Rootに対象となるTransformが設定されていない場合は専用のアイコンに切り替える 
                     if (kDynamicBoneType != null && component.GetType() == kDynamicBoneType)
                     {
                         if (kDynamicBoneType.GetField("m_Root").GetValue(component) == null)
@@ -251,6 +262,17 @@ public static class HierarchyIndentHelper
                         }
                     }
 
+#if VRC_SDK_VRCSDK3
+                    // PBがアタッチされていたら専用のアイコンに切り替える. rootTransformが設定されていない場合は警告用のアイコンを表示する
+                    foreach (var pb in component.GetComponents<VRCPhysBone>().Where(obj => obj != null))
+                    {
+                        if (pb.rootTransform != null) {
+                            icon = icon_resources_["VRCPhysBoneRoot"];
+                        } else {
+                            icon = icon_resources_["VRCPhysBonePartial"];
+                        }
+                    }
+#endif
                     DrawIcon_(icon, target_rect);
 
                     if (VRChierarchyHighlighterEdit.is_draw_vers.GetValue())

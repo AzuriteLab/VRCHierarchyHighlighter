@@ -8,7 +8,8 @@ VRCで扱う重要コンポーネントをアイコンで表示するやつで�
 * VRC_MirrorReflection(or VRC.SDK3.Components.VRCMirrorReflection)
 * MeshRenderer
 * SkinnedMeshRenderer
-* DynamicBone
+* DynamicBone (+ Collider)
+* VRCPhysBone (+ Collider)
 * AudioSource
 * Light
 * LightProbeGroup
@@ -40,6 +41,10 @@ BOOTHまたはgithubのリリースページからダウンロードしたunityp
 ## 更新履歴
 
 ```
+2022.04.25.0
+    * [VRChat] Physics Bone対応
+      * VRCPhysBone, VRCPhysBoneCollider用のアイコンを用意し, 描画するようにしました.
+
 2021.07.28.0
     * Unity2019LTS対応 (2)
       * オブジェクトアクティブ状態のトグルを再実装
