@@ -36,6 +36,7 @@ using System.IO;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using System.Collections.Immutable;
 
 #if (VRC_SDK_VRCSDK3 && !UDON)
 using VRC.Dynamics;
@@ -84,11 +85,12 @@ public static class HierarchyIndentHelper
         { "ToggleActiveObject", null },
     };
     private static readonly Type kDynamicBoneType = Type.GetType("DynamicBone, Assembly-CSharp");
+    private static readonly FieldInfo kDynamicBoneMRoot = kDynamicBoneType?.GetField("m_Root");
 
     private static Dictionary<string, Texture2D> icon_resources_
         = new Dictionary<string, Texture2D>();
 
-    private static IEnumerable<Transform> dynamic_bone_roots_ = new List<Transform>();
+    private static ImmutableHashSet<Transform> dynamic_bone_roots_ = ImmutableHashSet<Transform>.Empty;
 
     private static Texture2D LoadIconTex2DFromPNG(string path)
     {
@@ -133,8 +135,19 @@ public static class HierarchyIndentHelper
 
 
         EditorApplication.hierarchyWindowItemOnGUI += OnHierarchyWindowItemOnGUI;
-        EditorApplication.hierarchyWindowChanged += () =>
+        EditorApplication.hierarchyChanged += () =>
         {
+
+            // シーンの最初のGameObjectであれば、シーン全体のDynamicBoneのm_Rootを取得する 
+            if (kDynamicBoneType != null)
+            {
+                var rootGameObjects = SceneManager.GetActiveScene().GetRootGameObjects();
+                dynamic_bone_roots_ = rootGameObjects
+                    .SelectMany(root => root.GetComponentsInChildren(kDynamicBoneType))
+                    .Select(db => kDynamicBoneMRoot.GetValue(db) as Transform)
+                    .Where(db_root => db_root != null)
+                    .ToImmutableHashSet();
+            }
         };
     }
 
@@ -210,19 +223,6 @@ public static class HierarchyIndentHelper
                 SetupIcons();
             }
 
-            // シーンの最初のGameObjectであれば、シーン全体のDynamicBoneのm_Rootを取得する 
-            if (kDynamicBoneType != null)
-            {
-                var rootGameObjects = SceneManager.GetActiveScene().GetRootGameObjects();
-                if (rootGameObjects.FirstOrDefault() == obj)
-                {
-                    dynamic_bone_roots_ = rootGameObjects
-                        .SelectMany(root => root.GetComponentsInChildren(kDynamicBoneType))
-                        .Select(db => kDynamicBoneType.GetField("m_Root").GetValue(db) as Transform)
-                        .Where(db_root => db_root != null);
-                }
-            }
-
             target_rect.y -= 2;
 
             var components = obj.GetComponents(typeof(Component));
@@ -260,7 +260,7 @@ public static class HierarchyIndentHelper
                     // DynamicBoneのm_Rootに対象となるTransformが設定されていない場合は専用のアイコンに切り替える 
                     if (kDynamicBoneType != null && component.GetType() == kDynamicBoneType)
                     {
-                        if (kDynamicBoneType.GetField("m_Root").GetValue(component) == null)
+                        if (kDynamicBoneMRoot.GetValue(component) == null)
                         {
                             icon = icon_resources_["DynamicBonePartial"];
                         }
