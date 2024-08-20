@@ -4,6 +4,7 @@
 !*.md
 !*.png
 !*.cs
+!*.meta
 LICENSE
 
 !*.gitignore
