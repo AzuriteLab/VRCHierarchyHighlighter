@@ -52,7 +52,7 @@ public enum HighlightMode
 
 public static class HierarchyIndentHelper
 {
-    public const string kVersion = "2024.08.23.0";
+    public const string kVersion = "2024.08.26.0";
     public const string kSemanticVersion = "1.1.0";
     private const string kResourceSuffix = ".png"; 
     private const int kIconSize = 20;

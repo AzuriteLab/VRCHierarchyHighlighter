@@ -21,11 +21,47 @@ VRCで扱う重要コンポーネントをアイコンで表示するやつで�
 間違った階層にオブジェクトを突っ込むリスクを下げたり、オブジェクトにちゃんとDynamicBoneが適用されているのか、
 どのオブジェクトがVRCのアバターコンポーネントを持っているのか、メッシュ構造を持っているのかを可視化することが出来ます。
 
+## 導入方法
+
+導入方法は4つあります
+
+### 方法1. unitypackageをダウンロードしプロジェクトにD&Dして追加する
+
+手軽です. しかし以下のようなデメリットがあります.
+
+* Unityプロジェクトごとに手作業でAssetsに突っ込む必要がある
+* バージョンを更新する際自前でダウンロードしてくる必要がある
+* 既にあるプロジェクトのVRCHierarchyHighlighterを更新するときは元のを一旦削除してから再度突っ込む必要がある
+
+です. 他の方法を比べてこれが手間では無いと判断できれば慣れ親しんだこの方法は簡単です.
+
+BOOTHまたはgithubのリリースページからダウンロードしたunitypackageをプロジェクトのAssetsフォルダ直下に突っ込んでください
+
+### 方法2. zipファイルをダウンロードしてVCCから追加できるようにする（User Packages）
+
+VRChatCreatorCompanion(VCC)に追加し, 各プロジェクトに簡単に追加できるようになります.
+しかし以下のようなデメリットがあります.
+
+* 最初にダウンロードしてきたVRChatHierarchyHighlighterの場所はVCCロード後は動かせないためちゃんと場所を決める必要がある
+* やっぱりバージョンが更新されたら自前で持ってくる必要がある. そして自分で置き換える必要がある
+  * 置く場所は上で決めた場所にあるVRChatHierarchyHighlighterを置き換えるだけ
+  * プロジェクトごとのバージョン更新はVCC上で `Manage Packages` からボタン一発で出来るようになるのでそこは方法1よりは楽になる
+
+### 方法3. VCCにリポジトリを追加する
+
+VCCの設定で所定のリポジトリURLを追加すると `Manage Packages` から導入・更新可能になります.
+方法2と比べ, 更新があった場合自前でダウンロードしてくる必要がなくなります. また, 自分で決められた位置にVRChatHierarchyHighlighterを置く必要もなくなります.
+URL追加後は他のliltoonやModularAvatarといったパッケージと同様の方法で導入をしてください。
+
+追加URL: 
+`https://raw.githubusercontent.com/AzuriteLab/azlab_vrc_repos/master/index.json`
+
 ## 使い方
 
-BOOTHまたはgithubのリリースページからダウンロードしたunitypackageをプロジェクトのAssetsフォルダ直下に突っ込んでください（それ以外だと動作しません）
+導入するとHierarchyが階層ごとにハイライトされます
 
-設定パネルはUnityのメニューバーから `Window -> VRCHierarchyHighlighter` を選択して表示できます。
+設定パネルはUnityのメニューバーから `Window -> VRCHierarchyHighlighter` を選択して表示できます.<br>
+設定パネルからはポリゴン数の表示や, ヒエラルキに存在するゲームオブジェクトの種類を表示するための設定等があります.
 
 ## 捕捉
 
@@ -40,7 +76,23 @@ BOOTHまたはgithubのリリースページからダウンロードしたunityp
 
 ## 更新履歴
 
+この履歴はCHANGELOG.md形式に移行予定です
+
 ```
+2024.08.26.0
+    * narazakaさんとanatawa12さんのPRを取り込みました
+      * メッシュが存在しないSkinnedMeshRendererが存在する場合のエラーの回避
+      * DynamicBoneの探索を始めとした負荷に纏わる最適化
+      * 対応ありがとうございます!
+    * UnityPackageManager, VRChatPackageManagerに則したプロジェクト構成に変更しました
+      * これによりUnityPackageManagerおよびVRChatPackageManagerによって管理することが可能となります
+      * このリリース時点でコミュニティ用のリポジトリが招待制のためVCCからは検索が行えません. VCCから導入する場合は自前で指定する必要があります
+      * 導入の最低Unity最低バージョンは2019.4となります
+    * .gitignoreにmetaファイルを許可するよう変更を加えました
+      * Unityによって自動生成されたmetaファイルがリポジトリに追加されています
+      * 各パッケージマネージャへの対応に伴いリソースディレクトリの探索をmetaファイルのGUIDベースに変更しています
+        * そのため, metaファイルに変更を加えると機構が破綻するためご注意ください
+
 2022.04.25.1
     * [VRChat] Physics Bone対応修正
       * ワールド向けSDKにはPhysBoneコンポーネントが現状含まれないようなので、突貫で動作するよう修正しました

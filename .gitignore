@@ -5,7 +5,8 @@
 !*.png
 !*.cs
 !*.meta
-LICENSE
+!LICENSE
+!package.json
 
 !*.gitignore
 !*.gitattributes
