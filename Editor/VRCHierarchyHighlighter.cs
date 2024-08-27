@@ -317,7 +317,7 @@ public static class HierarchyIndentHelper
 
         var mesh = ((SkinnedMeshRenderer)component).sharedMesh;
         if (mesh)
-            GUI.Label(target_rect, string.Format("Vers: {0}", mesh.vertexCount));
+            GUI.Label(target_rect, string.Format("△{0}", mesh.triangles.Length / 3));
     }
 }
 
