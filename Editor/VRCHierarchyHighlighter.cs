@@ -52,8 +52,8 @@ public enum HighlightMode
 
 public static class HierarchyIndentHelper
 {
-    public const string kVersion = "2024.08.26.0";
-    public const string kSemanticVersion = "1.1.0";
+    public const string kVersion = "2024.08.30.0";
+    public const string kSemanticVersion = "1.1.1";
     private const string kResourceSuffix = ".png"; 
     private const int kIconSize = 20;
     // TODO SDK2とSDK3で名前空間が異なるため、それぞれのコンポーネント名を区別するようにする。現状は省略された形で応急的に対応している

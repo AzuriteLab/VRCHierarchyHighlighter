@@ -79,6 +79,11 @@ URL追加後は他のliltoonやModularAvatarといったパッケージと同様
 この履歴はCHANGELOG.md形式に移行予定です
 
 ```
+2024.08.30.0
+    * narazakaさんのPRを取り込みました
+      * 頂点数の表示がポリゴン数へと変更になります
+    * 上記調整に伴い変数・関数名に変更を入れています
+    
 2024.08.26.0
     * narazakaさんとanatawa12さんのPRを取り込みました
       * メッシュが存在しないSkinnedMeshRendererが存在する場合のエラーの回避
