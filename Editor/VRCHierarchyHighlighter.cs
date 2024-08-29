@@ -279,9 +279,9 @@ public static class HierarchyIndentHelper
 #endif
                     DrawIcon_(icon, target_rect);
 
-                    if (VRChierarchyHighlighterEdit.is_draw_vers.GetValue())
+                    if (VRChierarchyHighlighterEdit.is_draw_polygons.GetValue())
                     {
-                        PreviewVers_(component, target_rect);
+                        PreviewPolygons_(component, target_rect);
                     }
                     return;
                 }
@@ -301,7 +301,7 @@ public static class HierarchyIndentHelper
         GUI.Label(target_rect, icon);
     }
 
-    private static void PreviewVers_(Component component, Rect target_rect)
+    private static void PreviewPolygons_(Component component, Rect target_rect)
     {
         if (!component.ToString().Contains("SkinnedMeshRenderer"))
         {
@@ -383,8 +383,8 @@ public class VRChierarchyHighlighterEdit : EditorWindow
         = new VHHParameter<bool>(SetDefault_(true), "vhh.is_draw_toggle_icons", EditorPrefs.GetBool, EditorPrefs.SetBool);
     public static VHHParameter<bool> is_draw_highlights
         = new VHHParameter<bool>(SetDefault_(true), "vhh.is_draw_highlights", EditorPrefs.GetBool, EditorPrefs.SetBool);
-    public static VHHParameter<bool> is_draw_vers
-        = new VHHParameter<bool>(SetDefault_(false), "vhh.is_draw_vers", EditorPrefs.GetBool, EditorPrefs.SetBool);
+    public static VHHParameter<bool> is_draw_polygons
+        = new VHHParameter<bool>(SetDefault_(false), "vhh.is_draw_polygons", EditorPrefs.GetBool, EditorPrefs.SetBool);
     public static VHHParameter<bool> is_dark_mode
         = new VHHParameter<bool>(SetDefault_(for_std: false, for_pro: true), "vhh.is_dark_mode", EditorPrefs.GetBool, EditorPrefs.SetBool);
     public static VHHParameter<bool> use_active_checkbox
@@ -407,7 +407,7 @@ public class VRChierarchyHighlighterEdit : EditorWindow
         is_draw_icons.SetDefault();
         is_draw_highlights.SetDefault();
         is_draw_toggle_icons.SetDefault();
-        is_draw_vers.SetDefault();
+        is_draw_polygons.SetDefault();
         is_dark_mode.SetDefault();
         use_active_checkbox.SetDefault();
         hue_offset.SetDefault();
@@ -423,7 +423,7 @@ public class VRChierarchyHighlighterEdit : EditorWindow
         is_draw_icons.Destroy();
         is_draw_highlights.Destroy();
         is_draw_toggle_icons.Destroy();
-        is_draw_vers.Destroy();
+        is_draw_polygons.Destroy();
         is_dark_mode.Destroy();
         use_active_checkbox.Destroy();
         saturation.Destroy();
@@ -446,7 +446,7 @@ public class VRChierarchyHighlighterEdit : EditorWindow
         EditorGUILayout.LabelField("General Settings: ");
         EditorGUI.indentLevel++;
         is_draw_icons.SetValue(EditorGUILayout.ToggleLeft("Show Icons", is_draw_icons.GetValue()));
-        is_draw_vers.SetValue(EditorGUILayout.ToggleLeft("Show Vertexes", is_draw_vers.GetValue()));
+        is_draw_polygons.SetValue(EditorGUILayout.ToggleLeft("Show Polygons", is_draw_polygons.GetValue()));
         EditorGUI.indentLevel++;
         EditorGUILayout.LabelField("(Only when `Show Icons` is enabled)");
         EditorGUI.indentLevel--;
