@@ -23,9 +23,17 @@ VRCで扱う重要コンポーネントをアイコンで表示するやつで�
 
 ## 導入方法
 
-導入方法は4つあります
+導入方法は2つあります
 
-### 方法1. unitypackageをダウンロードしプロジェクトにD&Dして追加する
+### 方法1. VCCにリポジトリを追加する
+
+VCCの設定で所定のリポジトリURLを追加すると `Manage Packages` から導入・更新可能になります.
+URL追加後は他のliltoonやModularAvatarといったパッケージと同様の方法で導入をしてください。
+
+追加URL: 
+`https://raw.githubusercontent.com/AzuriteLab/azlab_vrc_repos/master/index.json`
+
+### 方法2. unitypackageをダウンロードしプロジェクトにD&Dして追加する
 
 手軽です. しかし以下のようなデメリットがあります.
 
@@ -36,25 +44,6 @@ VRCで扱う重要コンポーネントをアイコンで表示するやつで�
 です. 他の方法を比べてこれが手間では無いと判断できれば慣れ親しんだこの方法は簡単です.
 
 BOOTHまたはgithubのリリースページからダウンロードしたunitypackageをプロジェクトのAssetsフォルダ直下に突っ込んでください
-
-### 方法2. zipファイルをダウンロードしてVCCから追加できるようにする（User Packages）
-
-VRChatCreatorCompanion(VCC)に追加し, 各プロジェクトに簡単に追加できるようになります.
-しかし以下のようなデメリットがあります.
-
-* 最初にダウンロードしてきたVRChatHierarchyHighlighterの場所はVCCロード後は動かせないためちゃんと場所を決める必要がある
-* やっぱりバージョンが更新されたら自前で持ってくる必要がある. そして自分で置き換える必要がある
-  * 置く場所は上で決めた場所にあるVRChatHierarchyHighlighterを置き換えるだけ
-  * プロジェクトごとのバージョン更新はVCC上で `Manage Packages` からボタン一発で出来るようになるのでそこは方法1よりは楽になる
-
-### 方法3. VCCにリポジトリを追加する
-
-VCCの設定で所定のリポジトリURLを追加すると `Manage Packages` から導入・更新可能になります.
-方法2と比べ, 更新があった場合自前でダウンロードしてくる必要がなくなります. また, 自分で決められた位置にVRChatHierarchyHighlighterを置く必要もなくなります.
-URL追加後は他のliltoonやModularAvatarといったパッケージと同様の方法で導入をしてください。
-
-追加URL: 
-`https://raw.githubusercontent.com/AzuriteLab/azlab_vrc_repos/master/index.json`
 
 ## 使い方
 
