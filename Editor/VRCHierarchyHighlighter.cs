@@ -170,7 +170,10 @@ public static class HierarchyIndentHelper
         if (VRChierarchyHighlighterEdit.use_active_checkbox.GetValue() && ev.type == EventType.MouseUp)
         {
             if (icon_rect.Contains(Event.current.mousePosition)) {
-                obj.SetActive(!obj.activeSelf);
+                bool shouldBeActive = !obj.activeSelf;
+                Undo.RecordObject(obj, "Toggle GameObject Active State");
+                obj.SetActive(shouldBeActive);
+                obj.tag = shouldBeActive ? "Untagged" : "EditorOnly";
             }
         }
 
