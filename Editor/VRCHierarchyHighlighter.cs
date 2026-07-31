@@ -6,7 +6,7 @@
 /*
 The MIT License (MIT)
 
-Copyright (c) 2019-2021 AzuriteLab
+Copyright (c) 2019-2026 AzuriteLab
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -52,8 +52,8 @@ public enum HighlightMode
 
 public static class HierarchyIndentHelper
 {
-    public const string kVersion = "2024.08.30.0";
-    public const string kSemanticVersion = "1.1.1";
+    public const string kVersion = "2026.07.31.0";
+    public const string kSemanticVersion = "1.2.0";
     private const string kResourceSuffix = ".png"; 
     private const int kIconSize = 20;
     private const string kModularAvatarAssemblyName = "nadena.dev.modular-avatar.core";
