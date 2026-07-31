@@ -56,6 +56,9 @@ public static class HierarchyIndentHelper
     public const string kSemanticVersion = "1.1.1";
     private const string kResourceSuffix = ".png"; 
     private const int kIconSize = 20;
+    private const string kModularAvatarAssemblyName = "nadena.dev.modular-avatar.core";
+    private const string kModularAvatarIconPath
+        = "Packages/nadena.dev.modular-avatar/Runtime/Icons/Icon_MA_Script.png";
     // TODO SDK2とSDK3で名前空間が異なるため、それぞれのコンポーネント名を区別するようにする。現状は省略された形で応急的に対応している
     // TODO SDKに含まれるMirror prefabを使ってしまうと、MeshRendererが優先されてしまう。アイコンの適用方法をコンポーネント名を一旦キャッシュするなどして変更する必要がある
     private static readonly IDictionary<string, Type> kIconNamesAndTypes = new Dictionary<string, Type>()
@@ -88,6 +91,7 @@ public static class HierarchyIndentHelper
 
     private static Dictionary<string, Texture2D> icon_resources_
         = new Dictionary<string, Texture2D>();
+    private static Texture2D modular_avatar_icon_;
 
     private sealed class HierarchyItemCache
     {
@@ -120,6 +124,8 @@ public static class HierarchyIndentHelper
 
     private static void SetupIcons()
     {
+        modular_avatar_icon_ = AssetDatabase.LoadAssetAtPath<Texture2D>(kModularAvatarIconPath);
+
         var resource_dir_path = AssetDatabase.GUIDToAssetPath("31f0293911fb9e44aacd0542a80f0c70") + "/"; // Editor/Resource.meta GUID
         foreach (var nameAndType in kIconNamesAndTypes)
         {
@@ -418,6 +424,14 @@ public static class HierarchyIndentHelper
             return item_cache;
         }
 
+        if (modular_avatar_icon_ != null && component_buffer_.Any(IsModularAvatarComponent_))
+        {
+            item_cache.icon = modular_avatar_icon_;
+            item_cache.has_icon = true;
+            CachePolygonCount_(component_buffer_, item_cache);
+            return item_cache;
+        }
+
         if (dynamic_bone_roots_.Contains(component_buffer_[0].transform))
         {
             item_cache.icon = icon_resources_["DynamicBoneRoot"];
@@ -467,6 +481,29 @@ public static class HierarchyIndentHelper
         }
 
         return item_cache;
+    }
+
+    private static bool IsModularAvatarComponent_(Component component)
+    {
+        return component != null
+            && component.GetType().Assembly.GetName().Name == kModularAvatarAssemblyName;
+    }
+
+    private static void CachePolygonCount_(
+        IEnumerable<Component> components, HierarchyItemCache item_cache)
+    {
+        foreach (var component in components)
+        {
+            var skinned_mesh_renderer = component as SkinnedMeshRenderer;
+            if (skinned_mesh_renderer == null || skinned_mesh_renderer.sharedMesh == null)
+            {
+                continue;
+            }
+
+            item_cache.polygon_count = GetPolygonCount_(skinned_mesh_renderer.sharedMesh);
+            item_cache.has_polygon_count = true;
+            return;
+        }
     }
 
     private static bool TryGetComponentIcon_(Type component_type, out Texture2D icon)
