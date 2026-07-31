@@ -89,7 +89,25 @@ public static class HierarchyIndentHelper
     private static Dictionary<string, Texture2D> icon_resources_
         = new Dictionary<string, Texture2D>();
 
+    private sealed class HierarchyItemCache
+    {
+        public Texture2D icon;
+        public bool has_icon;
+        public ulong polygon_count;
+        public bool has_polygon_count;
+    }
+
+    private static readonly Dictionary<int, HierarchyItemCache> hierarchy_item_cache_
+        = new Dictionary<int, HierarchyItemCache>();
+    private static readonly Dictionary<Type, Texture2D> component_type_icon_cache_
+        = new Dictionary<Type, Texture2D>();
+    private static readonly HashSet<Type> component_types_without_icons_
+        = new HashSet<Type>();
+    private static readonly List<Component> component_buffer_ = new List<Component>();
+    private static int hovered_toggle_instance_id_;
+
     private static ImmutableHashSet<Transform> dynamic_bone_roots_ = ImmutableHashSet<Transform>.Empty;
+    private static bool dynamic_bone_roots_dirty_ = true;
 
     private static Texture2D LoadIconTex2DFromPNG(string path)
     {
@@ -110,6 +128,92 @@ public static class HierarchyIndentHelper
                 : LoadIconTex2DFromPNG(resource_dir_path + nameAndType.Key + kResourceSuffix);
             icon_resources_.Remove(nameAndType.Key);
             icon_resources_.Add(nameAndType.Key, icon);
+        }
+
+        ClearHierarchyItemCache_();
+    }
+
+    private static void ClearHierarchyItemCache_()
+    {
+        hierarchy_item_cache_.Clear();
+        component_type_icon_cache_.Clear();
+        component_types_without_icons_.Clear();
+    }
+
+    private static void OnHierarchyChanged_()
+    {
+        hierarchy_item_cache_.Clear();
+        dynamic_bone_roots_dirty_ = true;
+    }
+
+    private static UndoPropertyModification[] OnPostprocessModifications_(
+        UndoPropertyModification[] modifications)
+    {
+        foreach (var modification in modifications)
+        {
+            var target = modification.currentValue.target;
+            var component = target as Component;
+            var game_object = target as GameObject;
+            if (component != null)
+            {
+                game_object = component.gameObject;
+            }
+            if (game_object != null)
+            {
+                hierarchy_item_cache_.Remove(game_object.GetInstanceID());
+            }
+
+            if (kDynamicBoneType != null && target != null
+                && kDynamicBoneType.IsInstanceOfType(target))
+            {
+                dynamic_bone_roots_dirty_ = true;
+                hierarchy_item_cache_.Clear();
+            }
+        }
+        return modifications;
+    }
+
+    private static void EnsureDynamicBoneRoots_()
+    {
+        if (!dynamic_bone_roots_dirty_)
+        {
+            return;
+        }
+
+        dynamic_bone_roots_dirty_ = false;
+        if (kDynamicBoneType == null)
+        {
+            dynamic_bone_roots_ = ImmutableHashSet<Transform>.Empty;
+            return;
+        }
+
+        var rootGameObjects = SceneManager.GetActiveScene().GetRootGameObjects();
+        dynamic_bone_roots_ = rootGameObjects
+            .SelectMany(root => root.GetComponentsInChildren(kDynamicBoneType, true))
+            .Select(db => kDynamicBoneMRoot.GetValue(db) as Transform)
+            .Where(db_root => db_root != null)
+            .ToImmutableHashSet();
+    }
+
+    private static void EnableHierarchyMouseMoveEvents_()
+    {
+        foreach (var window in Resources.FindObjectsOfTypeAll<EditorWindow>())
+        {
+            if (window.GetType().FullName == "UnityEditor.SceneHierarchyWindow")
+            {
+                window.wantsMouseMove = true;
+            }
+        }
+    }
+
+    private static void EnableMouseMoveEventsForHoveredHierarchy_()
+    {
+        var window = EditorWindow.mouseOverWindow;
+        if (window != null
+            && window.GetType().FullName == "UnityEditor.SceneHierarchyWindow"
+            && !window.wantsMouseMove)
+        {
+            window.wantsMouseMove = true;
         }
     }
 
@@ -137,23 +241,21 @@ public static class HierarchyIndentHelper
         EditorApplication.hierarchyWindowItemOnGUI += OnHierarchyWindowItemOnGUI;
         EditorApplication.hierarchyChanged += () =>
         {
+            OnHierarchyChanged_();
 
             // シーンの最初のGameObjectであれば、シーン全体のDynamicBoneのm_Rootを取得する 
-            if (kDynamicBoneType != null)
-            {
-                var rootGameObjects = SceneManager.GetActiveScene().GetRootGameObjects();
-                dynamic_bone_roots_ = rootGameObjects
-                    .SelectMany(root => root.GetComponentsInChildren(kDynamicBoneType))
-                    .Select(db => kDynamicBoneMRoot.GetValue(db) as Transform)
-                    .Where(db_root => db_root != null)
-                    .ToImmutableHashSet();
-            }
         };
+        EditorApplication.projectChanged += ClearHierarchyItemCache_;
+        Undo.undoRedoPerformed += OnHierarchyChanged_;
+        Undo.postprocessModifications += OnPostprocessModifications_;
+        EditorApplication.delayCall += EnableHierarchyMouseMoveEvents_;
     }
 
     private static void OnHierarchyWindowItemOnGUI
     (int instance_id, Rect target_rect)
     {
+        EnableMouseMoveEventsForHoveredHierarchy_();
+
         var obj = EditorUtility.InstanceIDToObject(instance_id) as GameObject;
         if (obj == null)
         {
@@ -167,6 +269,7 @@ public static class HierarchyIndentHelper
         icon_rect.height = kIconSize;
 
         Event ev = Event.current;
+        UpdateToggleHover_(instance_id, icon_rect, ev);
         if (VRChierarchyHighlighterEdit.use_active_checkbox.GetValue() && ev.type == EventType.MouseUp)
         {
             if (icon_rect.Contains(Event.current.mousePosition)) {
@@ -216,9 +319,8 @@ public static class HierarchyIndentHelper
             GUI.Box(rect, "");
         }
 
-        if (VRChierarchyHighlighterEdit.is_draw_icons.GetValue())
+        if (VRChierarchyHighlighterEdit.is_draw_icons.GetValue() && ev.type == EventType.Repaint)
         {
-            int cnt = icon_resources_.Count;
             if (icon_resources_[kIconNamesAndTypes.First().Key] == null)
             {
                 // 実行モードに移行して戻ると何故かメンバの中身が初期化されてしまうので再セットアップ
@@ -228,20 +330,198 @@ public static class HierarchyIndentHelper
 
             target_rect.y -= 2;
 
-            var components = obj.GetComponents(typeof(Component));
-            if (components.Length > 0) {
-                DrawIcons_(components, target_rect);
+            var item_cache = GetHierarchyItemCache_(obj);
+            if (item_cache.has_icon) {
+                DrawIcon_(item_cache.icon, target_rect);
+            }
+            if (VRChierarchyHighlighterEdit.is_draw_polygons.GetValue()
+                && item_cache.has_polygon_count) {
+                PreviewPolygons_(item_cache.polygon_count, target_rect);
             }
             if (!obj.activeSelf) {
                 DrawIcon_(icon_resources_["InactiveObject"], target_rect);
             }
         }
 
-        if (VRChierarchyHighlighterEdit.is_draw_toggle_icons.GetValue() && icon_rect.Contains(ev.mousePosition)) {
+        if (VRChierarchyHighlighterEdit.is_draw_toggle_icons.GetValue()
+            && instance_id == hovered_toggle_instance_id_) {
             DrawIcon_(icon_resources_["ToggleActiveObject"], target_rect);
         }
 
         GUI.color = color;
+    }
+
+    private static void UpdateToggleHover_(int instance_id, Rect icon_rect, Event ev)
+    {
+        if (!VRChierarchyHighlighterEdit.use_active_checkbox.GetValue()
+            || !VRChierarchyHighlighterEdit.is_draw_toggle_icons.GetValue())
+        {
+            if (hovered_toggle_instance_id_ != 0)
+            {
+                hovered_toggle_instance_id_ = 0;
+                EditorApplication.RepaintHierarchyWindow();
+            }
+            return;
+        }
+
+        if (ev.type == EventType.MouseLeaveWindow)
+        {
+            if (hovered_toggle_instance_id_ != 0)
+            {
+                hovered_toggle_instance_id_ = 0;
+                EditorApplication.RepaintHierarchyWindow();
+            }
+            return;
+        }
+
+        if (!ev.isMouse)
+        {
+            return;
+        }
+
+        bool contains_mouse = icon_rect.Contains(ev.mousePosition);
+        if (contains_mouse && hovered_toggle_instance_id_ != instance_id)
+        {
+            hovered_toggle_instance_id_ = instance_id;
+            EditorApplication.RepaintHierarchyWindow();
+        }
+        else if (!contains_mouse && hovered_toggle_instance_id_ == instance_id)
+        {
+            hovered_toggle_instance_id_ = 0;
+            EditorApplication.RepaintHierarchyWindow();
+        }
+    }
+
+    private static HierarchyItemCache GetHierarchyItemCache_(GameObject obj)
+    {
+        HierarchyItemCache item_cache;
+        if (hierarchy_item_cache_.TryGetValue(obj.GetInstanceID(), out item_cache))
+        {
+            return item_cache;
+        }
+
+        item_cache = BuildHierarchyItemCache_(obj);
+        hierarchy_item_cache_[obj.GetInstanceID()] = item_cache;
+        return item_cache;
+    }
+
+    private static HierarchyItemCache BuildHierarchyItemCache_(GameObject obj)
+    {
+        EnsureDynamicBoneRoots_();
+
+        var item_cache = new HierarchyItemCache();
+        component_buffer_.Clear();
+        obj.GetComponents(component_buffer_);
+
+        if (component_buffer_.Count == 0)
+        {
+            return item_cache;
+        }
+
+        if (dynamic_bone_roots_.Contains(component_buffer_[0].transform))
+        {
+            item_cache.icon = icon_resources_["DynamicBoneRoot"];
+            item_cache.has_icon = true;
+            return item_cache;
+        }
+
+        foreach (Component component in component_buffer_)
+        {
+            if (component == null)
+            {
+                continue;
+            }
+
+            Texture2D icon;
+            if (!TryGetComponentIcon_(component.GetType(), out icon))
+            {
+                continue;
+            }
+
+            if (kDynamicBoneType != null && component.GetType() == kDynamicBoneType
+                && kDynamicBoneMRoot.GetValue(component) == null)
+            {
+                icon = icon_resources_["DynamicBonePartial"];
+            }
+
+#if (VRC_SDK_VRCSDK3 && !UDON)
+            var phys_bone = component as VRCPhysBone;
+            if (phys_bone != null)
+            {
+                icon = phys_bone.rootTransform != null
+                    ? icon_resources_["VRCPhysBoneRoot"]
+                    : icon_resources_["VRCPhysBonePartial"];
+            }
+#endif
+
+            item_cache.icon = icon;
+            item_cache.has_icon = true;
+
+            var skinned_mesh_renderer = component as SkinnedMeshRenderer;
+            if (skinned_mesh_renderer != null && skinned_mesh_renderer.sharedMesh != null)
+            {
+                item_cache.polygon_count = GetPolygonCount_(skinned_mesh_renderer.sharedMesh);
+                item_cache.has_polygon_count = true;
+            }
+            break;
+        }
+
+        return item_cache;
+    }
+
+    private static bool TryGetComponentIcon_(Type component_type, out Texture2D icon)
+    {
+        if (component_type_icon_cache_.TryGetValue(component_type, out icon))
+        {
+            return true;
+        }
+        if (component_types_without_icons_.Contains(component_type))
+        {
+            return false;
+        }
+
+        foreach (var icon_info in icon_resources_.Reverse())
+        {
+            if (component_type.Name.Contains(icon_info.Key))
+            {
+                icon = icon_info.Value;
+                component_type_icon_cache_[component_type] = icon;
+                return true;
+            }
+        }
+
+        component_types_without_icons_.Add(component_type);
+        icon = null;
+        return false;
+    }
+
+    private static ulong GetPolygonCount_(Mesh mesh)
+    {
+        ulong polygon_count = 0;
+        for (int sub_mesh_index = 0; sub_mesh_index < mesh.subMeshCount; ++sub_mesh_index)
+        {
+            var index_count = (ulong)mesh.GetIndexCount(sub_mesh_index);
+            switch (mesh.GetTopology(sub_mesh_index))
+            {
+                case MeshTopology.Triangles:
+                    polygon_count += index_count / 3;
+                    break;
+                case MeshTopology.Quads:
+                    polygon_count += index_count / 4;
+                    break;
+            }
+        }
+        return polygon_count;
+    }
+
+    private static void PreviewPolygons_(ulong polygon_count, Rect target_rect)
+    {
+        GUI.color = EditorGUIUtility.isProSkin ? Color.white : Color.black;
+
+        target_rect.x = target_rect.xMax - 80 - kIconSize;
+        target_rect.width = 100;
+        target_rect.height = kIconSize;
+        GUI.Label(target_rect, string.Format("△{0}", polygon_count));
     }
 
     private static void DrawIcons_(Component[] components, Rect target_rect)
@@ -313,8 +593,7 @@ public static class HierarchyIndentHelper
 
         GUI.color = EditorGUIUtility.isProSkin ? Color.white : Color.black;
 
-        var rect = EditorGUILayout.GetControlRect();
-        target_rect.x = rect.xMax - 80 - kIconSize; // 右寄せにする場合
+        target_rect.x = target_rect.xMax - 80 - kIconSize; // 右寄せにする場合
         target_rect.width = 100;
         target_rect.height = kIconSize;
 
